@@ -345,20 +345,20 @@ class HaDysonCard extends HTMLElement {
     return {
       deviceId,
       device,
-      temperatureEntity: this._findEntityByHints(sameDevice, "sensor", ["temperature"]),
-      humidityEntity: this._findEntityByHints(sameDevice, "sensor", ["humidity"]),
-      airQualityEntity: this._findEntityByHints(sameDevice, "sensor", ["air_quality_category", "air_quality", "aqi", "pm25", "pm2_5", "pm10", "no2", "voc"]),
-      vocEntity: this._findEntityByHints(sameDevice, "sensor", ["voc"]),
-      hepaFilterEntity: this._findEntityByHints(sameDevice, "sensor", ["hepa_filter_life", "hepa filter life"]),
-      carbonFilterEntity: this._findEntityByHints(sameDevice, "sensor", ["carbon_filter_life", "carbon filter life"]),
-      nightModeEntity: this._findEntityByHints(sameDevice, "switch", ["night mode", "night_mode", "nachtmodus", "nacht modus"]),
+      temperatureEntity: this._findEntityByRegistryKeys(sameDevice, "sensor", ["temperature"]),
+      humidityEntity: this._findEntityByRegistryKeys(sameDevice, "sensor", ["humidity"]),
+      airQualityEntity: this._findEntityByRegistryKeys(sameDevice, "sensor", ["air_quality_category", "air_quality", "aqi", "pm25", "pm2_5", "pm10", "no2", "voc"]),
+      vocEntity: this._findEntityByRegistryKeys(sameDevice, "sensor", ["voc", "volatile_organic_compounds"]),
+      hepaFilterEntity: this._findEntityByRegistryKeys(sameDevice, "sensor", ["hepa_filter_life"], ["hepa_filter_life", "hepa filter life"]),
+      carbonFilterEntity: this._findEntityByRegistryKeys(sameDevice, "sensor", ["carbon_filter_life"], ["carbon_filter_life", "carbon filter life"]),
+      nightModeEntity: this._findEntityByRegistryKeys(sameDevice, "switch", ["night_mode"], ["night mode", "night_mode", "nachtmodus", "nacht modus"]),
       climateEntity: this._findFirstEntity(sameDevice, "climate"),
-      oscillationSelectEntity: this._findEntityByHints(sameDevice, "select", ["oscillation", "oszillation"]),
-      oscillationLowEntity: this._findEntityByHints(sameDevice, "number", ["oscillation low angle", "oscillation low", "oszillations unterwinkel", "unterwinkel"]),
-      oscillationHighEntity: this._findEntityByHints(sameDevice, "number", ["oscillation high angle", "oscillation high", "oszillations oberwinkel", "oberwinkel"]),
-      oscillationCenterEntity: this._findEntityByHints(sameDevice, "number", ["oscillation center angle", "oscillation center", "oszillations mittelwinkel", "mittelwinkel"]),
-      oscillationSpanEntity: this._findEntityByHints(sameDevice, "number", ["oscillation angle", "oscillation span", "oszillationswinkel", "winkel"]),
-      sleepTimerEntity: this._findEntityByHints(sameDevice, "number", ["sleep timer", "sleep_timer", "schlaftimer", "schlaf timer"]),
+      oscillationSelectEntity: this._findEntityByRegistryKeys(sameDevice, "select", ["oscillation"], ["oscillation", "oszillation"]),
+      oscillationLowEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["oscillation_low_angle"], ["oscillation low angle", "oscillation low", "oszillations unterwinkel", "unterwinkel"]),
+      oscillationHighEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["oscillation_high_angle"], ["oscillation high angle", "oscillation high", "oszillations oberwinkel", "oberwinkel"]),
+      oscillationCenterEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["oscillation_center_angle"], ["oscillation center angle", "oscillation center", "oszillations mittelwinkel", "mittelwinkel"]),
+      oscillationSpanEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["oscillation_angle"], ["oscillation angle", "oscillation span", "oszillationswinkel", "winkel"]),
+      sleepTimerEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["sleep_timer"], ["sleep timer", "sleep_timer", "schlaftimer", "schlaf timer"]),
       relatedEntities: sameDevice
         .map((entry) => entry.entity_id)
         .filter(Boolean)
@@ -393,13 +393,39 @@ class HaDysonCard extends HTMLElement {
     return entries.find((entry) => entry.entity_id?.startsWith(`${domain}.`))?.entity_id || "";
   }
 
+  _findEntityByRegistryKeys(entries, domain, keys, fallbackHints = keys) {
+    return this._findEntityByStableKeys(entries, domain, keys) || this._findEntityByHints(entries, domain, fallbackHints);
+  }
+
+  _findEntityByStableKeys(entries, domain, keys) {
+    const normalizedKeys = keys.map((key) => this._normalizeSearchText(key)).filter(Boolean);
+    const matchingDomain = entries.filter((entry) => entry.entity_id?.startsWith(`${domain}.`));
+    for (const key of normalizedKeys) {
+      const byKey = matchingDomain.find((entry) => {
+        const stableFields = [entry.unique_id || "", entry.translation_key || ""];
+        return stableFields.some((field) => {
+          const normalizedField = this._normalizeSearchText(field);
+          return normalizedField === key || normalizedField.endsWith(` ${key}`);
+        });
+      });
+      if (byKey) return byKey.entity_id;
+    }
+    return "";
+  }
+
   _findEntityByHints(entries, domain, hints) {
     const normalizedHints = hints.map((hint) => this._normalizeSearchText(hint)).filter(Boolean);
     const matchingDomain = entries.filter((entry) => entry.entity_id?.startsWith(`${domain}.`));
     for (const hint of normalizedHints) {
       const byHint = matchingDomain.find((entry) => {
-        const haystack = this._normalizeSearchText(`${entry.entity_id || ""} ${entry.original_name || ""} ${entry.name || ""}`);
-        return haystack.includes(hint);
+        const searchableFields = [
+          entry.entity_id || "",
+          entry.original_name || "",
+          entry.name || "",
+          entry.unique_id || "",
+          entry.translation_key || "",
+        ];
+        return searchableFields.some((field) => this._normalizeSearchText(field).includes(hint));
       });
       if (byHint) return byHint.entity_id;
     }
@@ -2402,7 +2428,7 @@ class HaDysonCard extends HTMLElement {
     const showSleepTimerControl = !hideUnsupported || sleepTimerAvailable;
     const showDirectionRow = showAirflowControl || showSleepTimerControl;
     const showModeRow = (!hideUnsupported) || heatAvailable || fanOnlyAvailable || targetTempAvailable;
-    const hideEmptyData = hideUnsupported || hideEmptySensors;
+    const hideEmptyData = hideEmptySensors;
     const hasTempValue = this._hasMeaningfulValue(temp);
     const hasHumidityValue = this._hasMeaningfulValue(humidity);
     const hasAqiValue = this._hasMeaningfulValue(aqi);
@@ -2443,6 +2469,7 @@ class HaDysonCard extends HTMLElement {
           box-sizing: border-box;
         }
         ha-card {
+          container-type: inline-size;
           --dyson-panel-bg: color-mix(in srgb, var(--card-background-color, #fff) 94%, #000 6%);
           --dyson-field-bg: color-mix(in srgb, var(--card-background-color, #fff) 84%, transparent);
           --dyson-raised-bg: var(--card-background-color, #fff);
@@ -3665,7 +3692,7 @@ class HaDysonCard extends HTMLElement {
           opacity: 0.68;
           pointer-events: none;
         }
-        @media (max-width: 520px) {
+        @container (max-width: 520px) {
           .direction-chip {
             padding-inline: 6px;
             font-size: 0.7rem;
