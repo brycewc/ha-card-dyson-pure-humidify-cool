@@ -88,7 +88,11 @@ Direction presets are local to the browser/device. They do not sync automaticall
 
 ## HACS Install
 
-Install it from the default HACS catalog:
+Click the button below to open this repository directly in HACS:
+
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thanhn062&repository=ha-dyson-card&category=plugin)
+
+Or install it manually from the default HACS catalog:
 
 1. HACS -> `Dashboard`
 2. Search for `HA Dyson Card`
