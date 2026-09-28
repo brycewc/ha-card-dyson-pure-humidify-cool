@@ -19,6 +19,8 @@
 
 A sleek Lovelace dashboard card for Dyson fans exposed through [`hass_dyson`](https://github.com/cmgrayb/hass-dyson).
 
+[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thanhn062&repository=ha-dyson-card&category=plugin)
+
 I built this because I dislike having to open the Dyson app just to make the fan face a certain direction. This card brings that daily control flow into Home Assistant, next to the rest of the dashboard.
 
 This is a frontend card only. It does not replace the Dyson integration; it uses the fan, climate, switch, select, number, and sensor entities already exposed in Home Assistant.
@@ -88,11 +90,7 @@ Direction presets are local to the browser/device. They do not sync automaticall
 
 ## HACS Install
 
-Click the button below to open this repository directly in HACS:
-
-[![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thanhn062&repository=ha-dyson-card&category=plugin)
-
-Or install it manually from the default HACS catalog:
+Use the **Open in HACS** button near the top of this page, or install it manually from the default HACS catalog:
 
 1. HACS -> `Dashboard`
 2. Search for `HA Dyson Card`
