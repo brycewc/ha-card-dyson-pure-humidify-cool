@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.1.5 - 2026-09-28
+
+- Discover Dyson companion entities from stable `unique_id` and `translation_key` registry fields before falling back to localized names, restoring humidity, air-quality, filter, night-mode, oscillation, and sleep-timer controls on non-English Home Assistant installations.
+- Match fallback hints against each registry field independently so adjacent fields cannot create false matches, including the total oscillation angle incorrectly resolving to the low-angle entity.
+- Keep `hide_unsupported` and `hide_empty_sensors` independent instead of making the former silently hide empty sensor badges.
+- Apply narrow-layout rules using the card container width rather than the browser viewport, fixing overflow in narrow dashboard columns.
+
 ## 0.1.4 - 2026-08-30
 
 - Add a full French (`fr`) translation of the card UI and of the visual editor, selectable via the `language` option or picked up automatically from the Home Assistant/browser locale.
