@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.1.6 - 2026-09-29
+
+- Let inline sensor badges wrap across rows instead of forcing every badge into a clipped horizontal strip.
+- Keep collapsed panel sensor details horizontally scrollable while using safe centering so content on the left remains reachable.
+- Add regression coverage for inline wrapping and run the regression suite in GitHub Actions.
+
 ## 0.1.5 - 2026-09-28
 
 - Discover Dyson companion entities from stable `unique_id` and `translation_key` registry fields before falling back to localized names, restoring humidity, air-quality, filter, night-mode, oscillation, and sleep-timer controls on non-English Home Assistant installations.
