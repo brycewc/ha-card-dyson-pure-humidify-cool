@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.7 - 2026-09-29
+
 - Sync direction presets through Home Assistant's per-user frontend storage so they follow the same user across phones, tablets, wall panels, and browsers.
 - Automatically migrate existing browser-only presets when Home Assistant has no stored copy, while retaining `localStorage` as a fast cache and failure fallback.
 - Subscribe to preset storage updates so changes from another active session appear without reloading the dashboard.
