@@ -72,5 +72,9 @@ assert.doesNotMatch(source, /const hideEmptyData = hideUnsupported \|\| hideEmpt
 assert.match(source, /container-type:\s*inline-size;/);
 assert.match(source, /@container \(max-width: 520px\)/);
 assert.doesNotMatch(source, /@media \(max-width: 520px\)/);
+assert.match(source, /wheel-sensor-strip sensor-layout-\$\{sensorDetailLayout\}/);
+assert.match(source, /\.wheel-sensor-strip:not\(\.expanded\):not\(\.sensor-layout-inline\)/);
+assert.match(source, /justify-content:\s*safe center;/);
+assert.doesNotMatch(source, /\.wheel-sensor-strip:not\(\.expanded\)\s*\{/);
 
 console.log("regressions passed");

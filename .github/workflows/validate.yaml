@@ -27,3 +27,5 @@ jobs:
           node-version: "24"
       - name: Check card syntax
         run: node --check ha-dyson-card.js
+      - name: Run regression tests
+        run: node tests/regressions.mjs
