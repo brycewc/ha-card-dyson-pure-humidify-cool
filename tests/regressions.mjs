@@ -4,6 +4,21 @@ import vm from "node:vm";
 
 const source = fs.readFileSync(new URL("../ha-dyson-card.js", import.meta.url), "utf8");
 const registry = new Map();
+const localValues = new Map();
+const localStorage = {
+  getItem(key) {
+    return localValues.has(key) ? localValues.get(key) : null;
+  },
+  setItem(key, value) {
+    localValues.set(key, String(value));
+  },
+  removeItem(key) {
+    localValues.delete(key);
+  },
+  clear() {
+    localValues.clear();
+  },
+};
 const context = {
   console,
   HTMLElement: class HTMLElement {
@@ -19,7 +34,7 @@ const context = {
       return registry.get(name);
     },
   },
-  window: {},
+  window: { localStorage },
   navigator: { language: "fr-FR" },
 };
 
@@ -76,5 +91,152 @@ assert.match(source, /wheel-sensor-strip sensor-layout-\$\{sensorDetailLayout\}/
 assert.match(source, /\.wheel-sensor-strip:not\(\.expanded\):not\(\.sensor-layout-inline\)/);
 assert.match(source, /justify-content:\s*safe center;/);
 assert.doesNotMatch(source, /\.wheel-sensor-strip:not\(\.expanded\)\s*\{/);
+
+const syncCard = new Card();
+syncCard._config = { entity: "fan.synced_dyson" };
+const syncKey = syncCard._presetStorageKey();
+localStorage.setItem(syncKey, JSON.stringify([
+  { id: "local-bed", name: "Bed", icon: "mdi:bed", direction: 42 },
+]));
+
+let serverValue = null;
+let subscriptionCallback = null;
+let subscriptionClosed = false;
+const syncCalls = [];
+syncCard._hass = {
+  async callWS(message) {
+    syncCalls.push(message);
+    if (message.type === "frontend/get_user_data") {
+      return { value: serverValue };
+    }
+    if (message.type === "frontend/set_user_data") {
+      serverValue = message.value;
+      if (subscriptionCallback) subscriptionCallback({ value: serverValue });
+      return null;
+    }
+    throw new Error(`Unexpected message type: ${message.type}`);
+  },
+  connection: {
+    async subscribeMessage(callback, message) {
+      assert.equal(message.type, "frontend/subscribe_user_data");
+      assert.equal(message.key, syncKey);
+      subscriptionCallback = callback;
+      callback({ value: serverValue });
+      return () => {
+        subscriptionClosed = true;
+      };
+    },
+  },
+};
+
+await syncCard._ensureDirectionPresets();
+assert.equal(serverValue.version, 1, "local migration should write a versioned HA payload");
+assert.deepEqual(JSON.parse(JSON.stringify(serverValue.presets)), [
+  { id: "local-bed", name: "Bed", icon: "mdi:bed", direction: 40 },
+]);
+assert.equal(syncCalls.filter((call) => call.type === "frontend/set_user_data").length, 1);
+assert.equal(syncCard._directionPresets()[0].name, "Bed");
+
+await syncCard._addDirectionPreset("Desk", "mdi:desk", 91);
+assert.equal(serverValue.presets.length, 2, "adding a preset should persist to HA storage");
+assert.equal(serverValue.presets[1].name, "Desk");
+assert.equal(serverValue.presets[1].direction, 90);
+
+subscriptionCallback({
+  value: {
+    version: 1,
+    presets: [{ id: "remote-sofa", name: "Sofa", icon: "mdi:sofa", direction: 181 }],
+  },
+});
+assert.deepEqual(JSON.parse(JSON.stringify(syncCard._directionPresets())), [
+  { id: "remote-sofa", name: "Sofa", icon: "mdi:sofa", direction: 180 },
+]);
+assert.equal(JSON.parse(localStorage.getItem(syncKey))[0].name, "Sofa", "subscription updates should refresh the local cache");
+
+syncCard.disconnectedCallback();
+assert.equal(subscriptionClosed, true, "disconnecting the card should release the HA subscription");
+
+const serverWinsCard = new Card();
+serverWinsCard._config = { entity: "fan.server_wins" };
+const serverWinsKey = serverWinsCard._presetStorageKey();
+localStorage.setItem(serverWinsKey, JSON.stringify([
+  { id: "stale-local", name: "Stale", icon: "mdi:history", direction: 10 },
+]));
+let serverWinsWriteCount = 0;
+serverWinsCard._hass = {
+  async callWS(message) {
+    if (message.type === "frontend/get_user_data") {
+      return {
+        value: {
+          version: 1,
+          presets: [{ id: "server-chair", name: "Chair", icon: "mdi:chair-rolling", direction: 275 }],
+        },
+      };
+    }
+    if (message.type === "frontend/set_user_data") {
+      serverWinsWriteCount += 1;
+      return null;
+    }
+    throw new Error(`Unexpected message type: ${message.type}`);
+  },
+};
+await serverWinsCard._ensureDirectionPresets();
+assert.equal(serverWinsWriteCount, 0, "an existing HA value should not be overwritten during hydration");
+assert.deepEqual(JSON.parse(JSON.stringify(serverWinsCard._directionPresets())), [
+  { id: "server-chair", name: "Chair", icon: "mdi:chair-rolling", direction: 275 },
+]);
+assert.equal(JSON.parse(localStorage.getItem(serverWinsKey))[0].name, "Chair", "the server value should refresh stale local data");
+
+const recoveryCard = new Card();
+recoveryCard._config = { entity: "fan.pending_recovery" };
+const recoveryKey = recoveryCard._presetStorageKey();
+const oldServerValue = {
+  version: 1,
+  presets: [{ id: "old-server", name: "Old", icon: "mdi:history", direction: 20 }],
+};
+recoveryCard._hass = {
+  async callWS(message) {
+    if (message.type === "frontend/get_user_data") return { value: oldServerValue };
+    if (message.type === "frontend/set_user_data") throw new Error("temporary write failure");
+    throw new Error(`Unexpected message type: ${message.type}`);
+  },
+};
+await recoveryCard._ensureDirectionPresets();
+const failedSave = await recoveryCard._saveDirectionPresets([
+  { id: "new-local", name: "New", icon: "mdi:sync-alert", direction: 205 },
+]);
+assert.equal(failedSave, false);
+assert.equal(localStorage.getItem(`${recoveryKey}:pending-sync`), "1", "a failed server write should leave a durable retry marker");
+
+let recoveredServerValue = oldServerValue;
+const reloadedRecoveryCard = new Card();
+reloadedRecoveryCard._config = { entity: "fan.pending_recovery" };
+reloadedRecoveryCard._hass = {
+  async callWS(message) {
+    if (message.type === "frontend/get_user_data") return { value: recoveredServerValue };
+    if (message.type === "frontend/set_user_data") {
+      recoveredServerValue = message.value;
+      return null;
+    }
+    throw new Error(`Unexpected message type: ${message.type}`);
+  },
+};
+await reloadedRecoveryCard._ensureDirectionPresets();
+assert.equal(recoveredServerValue.presets[0].name, "New", "a pending local change should recover over stale server data");
+assert.equal(localStorage.getItem(`${recoveryKey}:pending-sync`), null, "successful recovery should clear the retry marker");
+
+const fallbackCard = new Card();
+fallbackCard._config = { entity: "fan.local_fallback" };
+const fallbackKey = fallbackCard._presetStorageKey();
+localStorage.setItem(fallbackKey, JSON.stringify([
+  { id: "fallback-door", name: "Door", icon: "mdi:door", direction: 135 },
+]));
+fallbackCard._hass = {
+  async callWS() {
+    throw new Error("HA storage unavailable");
+  },
+};
+await fallbackCard._ensureDirectionPresets();
+assert.equal(fallbackCard._directionPresets()[0].name, "Door", "local presets should remain usable after a HA storage failure");
 
 console.log("regressions passed");
