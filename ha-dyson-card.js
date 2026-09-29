@@ -240,7 +240,28 @@ class HaDysonCard extends HTMLElement {
     this._presetDraftName = "";
     this._presetDraftIcon = "mdi:crosshairs-gps";
     this._pendingPresetDeleteId = null;
+    this._directionPresetCacheKey = "";
+    this._directionPresetCache = [];
+    this._directionPresetHydrationKey = "";
+    this._directionPresetHydrationPromise = null;
+    this._directionPresetWriteQueue = Promise.resolve();
+    this._directionPresetWriteRevision = 0;
+    this._directionPresetSubscriptionKey = "";
+    this._directionPresetUnsubscribe = null;
+    this._directionPresetSubscriptionGeneration = 0;
+    this._directionPresetSyncGeneration = 0;
+    this._directionPresetRetryAfter = 0;
     this._sensorDetailsOpen = false;
+  }
+
+  connectedCallback() {
+    void this._ensureDirectionPresets().then(() => {
+      void this._subscribeDirectionPresetUpdates(this._presetStorageKey(), this._directionPresetSyncGeneration);
+    });
+  }
+
+  disconnectedCallback() {
+    this._stopDirectionPresetSubscription();
   }
 
   setConfig(config) {
@@ -251,6 +272,7 @@ class HaDysonCard extends HTMLElement {
     const hideEmptySensors = config.hide_empty_sensors === true || String(config.hide_empty_sensors).toLowerCase() === "true";
     const thresholdValue = Number(config.sensor_more_button_threshold);
     const sensorMoreButtonThreshold = Number.isFinite(thresholdValue) ? this._clamp(Math.round(thresholdValue), 1, 20) : 4;
+    const previousEntity = this._config.entity || "";
     this._config = {
       title: "",
       airflow_control_side: "right",
@@ -271,6 +293,9 @@ class HaDysonCard extends HTMLElement {
     this._presetDraftIcon = "mdi:crosshairs-gps";
     this._pendingPresetDeleteId = null;
     this._sensorDetailsOpen = false;
+    if (previousEntity !== this._config.entity) {
+      this._resetDirectionPresetSync();
+    }
     this._clearPending(false);
     this._clearPendingSpeed(false);
     this._clearOptimisticDirection(false);
@@ -281,6 +306,7 @@ class HaDysonCard extends HTMLElement {
     const preserveEditorFocus = this._presetEditorHasFocus();
     this._hass = hass;
     this._ensureDerived();
+    void this._ensureDirectionPresets();
     this._reconcilePendingState();
     if (!preserveEditorFocus) {
       this._render();
@@ -1457,51 +1483,245 @@ class HaDysonCard extends HTMLElement {
     return `ha-dyson-card:direction-presets:${this._config.entity || "default"}`;
   }
 
-  _directionPresets() {
+  _normalizeDirectionPresets(value) {
+    const candidates = Array.isArray(value) ? value : Array.isArray(value?.presets) ? value.presets : [];
+    return candidates
+      .map((preset) => {
+        const direction = Number(preset?.direction);
+        return {
+          id: String(preset?.id || ""),
+          name: String(preset?.name || "").trim(),
+          icon: String(preset?.icon || "mdi:crosshairs-gps").trim(),
+          direction: Number.isFinite(direction) ? this._normalizeAngle(direction) : NaN,
+        };
+      })
+      .filter((preset) => preset.id && preset.name && Number.isFinite(preset.direction));
+  }
+
+  _readLocalDirectionPresets(key = this._presetStorageKey()) {
     try {
-      const raw = window.localStorage?.getItem(this._presetStorageKey());
-      const parsed = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(parsed)) return [];
-      return parsed
-        .map((preset) => {
-          const direction = Number(preset.direction);
-          return {
-            id: String(preset.id || ""),
-            name: String(preset.name || "").trim(),
-            icon: String(preset.icon || "mdi:crosshairs-gps").trim(),
-            direction: Number.isFinite(direction) ? this._normalizeAngle(direction) : NaN,
-          };
-        })
-        .filter((preset) => preset.id && preset.name && Number.isFinite(preset.direction));
+      const raw = window.localStorage?.getItem(key);
+      return this._normalizeDirectionPresets(raw ? JSON.parse(raw) : []);
     } catch (_error) {
       return [];
     }
   }
 
-  _saveDirectionPresets(presets) {
+  _writeLocalDirectionPresets(key, presets) {
     try {
-      window.localStorage?.setItem(this._presetStorageKey(), JSON.stringify(presets));
+      window.localStorage?.setItem(key, JSON.stringify(presets));
     } catch (_error) {
       // Local storage can be unavailable in restricted browser contexts.
     }
   }
 
-  _addDirectionPreset(name, icon, direction) {
+  _directionPresetPendingKey(key = this._presetStorageKey()) {
+    return `${key}:pending-sync`;
+  }
+
+  _hasPendingDirectionPresetSync(key = this._presetStorageKey()) {
+    try {
+      return window.localStorage?.getItem(this._directionPresetPendingKey(key)) === "1";
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  _setPendingDirectionPresetSync(key, pending) {
+    try {
+      if (pending) {
+        window.localStorage?.setItem(this._directionPresetPendingKey(key), "1");
+      } else {
+        window.localStorage?.removeItem(this._directionPresetPendingKey(key));
+      }
+    } catch (_error) {
+      // Sync still works; only crash recovery loses its pending marker.
+    }
+  }
+
+  _directionPresetPayload(presets) {
+    return {
+      version: 1,
+      presets: this._normalizeDirectionPresets(presets),
+    };
+  }
+
+  _setDirectionPresetCache(key, presets, { writeLocal = true, render = false } = {}) {
+    if (key !== this._presetStorageKey()) return;
+    this._directionPresetCacheKey = key;
+    this._directionPresetCache = this._normalizeDirectionPresets(presets);
+    if (writeLocal) {
+      this._writeLocalDirectionPresets(key, this._directionPresetCache);
+    }
+    if (render && !this._presetEditorHasFocus()) {
+      this._render();
+    }
+  }
+
+  _directionPresets() {
+    const key = this._presetStorageKey();
+    if (this._directionPresetCacheKey !== key) {
+      this._directionPresetCacheKey = key;
+      this._directionPresetCache = this._readLocalDirectionPresets(key);
+      void this._ensureDirectionPresets();
+    }
+    return this._directionPresetCache;
+  }
+
+  _stopDirectionPresetSubscription() {
+    this._directionPresetSubscriptionGeneration += 1;
+    const unsubscribe = this._directionPresetUnsubscribe;
+    this._directionPresetUnsubscribe = null;
+    this._directionPresetSubscriptionKey = "";
+    if (typeof unsubscribe === "function") {
+      unsubscribe();
+    }
+  }
+
+  _resetDirectionPresetSync() {
+    this._directionPresetSyncGeneration += 1;
+    this._stopDirectionPresetSubscription();
+    this._directionPresetCacheKey = "";
+    this._directionPresetCache = [];
+    this._directionPresetHydrationKey = "";
+    this._directionPresetHydrationPromise = null;
+    this._directionPresetWriteQueue = Promise.resolve();
+    this._directionPresetWriteRevision = 0;
+    this._directionPresetRetryAfter = 0;
+  }
+
+  async _subscribeDirectionPresetUpdates(key, generation) {
+    const subscribeMessage = this._hass?.connection?.subscribeMessage;
+    if (typeof subscribeMessage !== "function" || this._directionPresetSubscriptionKey === key) return;
+
+    this._stopDirectionPresetSubscription();
+    this._directionPresetSubscriptionKey = key;
+    const subscriptionGeneration = this._directionPresetSubscriptionGeneration;
+    try {
+      const unsubscribe = await subscribeMessage.call(
+        this._hass.connection,
+        (event) => {
+          if (generation !== this._directionPresetSyncGeneration || key !== this._presetStorageKey()) return;
+          if (this._hasPendingDirectionPresetSync(key)) return;
+          const value = event?.value ?? event?.event?.value ?? null;
+          this._setDirectionPresetCache(key, value, { writeLocal: true, render: true });
+        },
+        { type: "frontend/subscribe_user_data", key }
+      );
+      if (
+        subscriptionGeneration !== this._directionPresetSubscriptionGeneration ||
+        generation !== this._directionPresetSyncGeneration ||
+        key !== this._presetStorageKey()
+      ) {
+        if (typeof unsubscribe === "function") unsubscribe();
+        return;
+      }
+      this._directionPresetUnsubscribe = unsubscribe;
+    } catch (_error) {
+      if (subscriptionGeneration === this._directionPresetSubscriptionGeneration && this._directionPresetSubscriptionKey === key) {
+        this._directionPresetSubscriptionKey = "";
+      }
+      // Reads and writes still work if live subscription is unavailable.
+    }
+  }
+
+  async _ensureDirectionPresets() {
+    const key = this._presetStorageKey();
+    if (this._directionPresetCacheKey !== key) {
+      this._directionPresetCacheKey = key;
+      this._directionPresetCache = this._readLocalDirectionPresets(key);
+    }
+    if (!this._hass?.callWS) return this._directionPresetCache;
+    if (this._directionPresetHydrationKey === key && this._directionPresetHydrationPromise) {
+      return this._directionPresetHydrationPromise;
+    }
+    if (Date.now() < this._directionPresetRetryAfter) return this._directionPresetCache;
+
+    const generation = this._directionPresetSyncGeneration;
+    const localPresets = this._readLocalDirectionPresets(key);
+    this._directionPresetHydrationKey = key;
+    this._directionPresetHydrationPromise = (async () => {
+      try {
+        const response = await this._hass.callWS({ type: "frontend/get_user_data", key });
+        if (generation !== this._directionPresetSyncGeneration || key !== this._presetStorageKey()) {
+          return this._directionPresetCache;
+        }
+
+        const hasServerValue = response && Object.prototype.hasOwnProperty.call(response, "value") && response.value !== null;
+        const hasPendingLocalValue = this._hasPendingDirectionPresetSync(key);
+        const useLocalValue = !hasServerValue || hasPendingLocalValue;
+        const presets = useLocalValue ? localPresets : this._normalizeDirectionPresets(response.value);
+        this._setDirectionPresetCache(key, presets, { writeLocal: true, render: true });
+
+        if ((!hasServerValue && localPresets.length) || hasPendingLocalValue) {
+          await this._hass.callWS({
+            type: "frontend/set_user_data",
+            key,
+            value: this._directionPresetPayload(localPresets),
+          });
+          this._setPendingDirectionPresetSync(key, false);
+        }
+
+        await this._subscribeDirectionPresetUpdates(key, generation);
+        return this._directionPresetCache;
+      } catch (_error) {
+        if (generation === this._directionPresetSyncGeneration && key === this._presetStorageKey()) {
+          this._directionPresetHydrationKey = "";
+          this._directionPresetHydrationPromise = null;
+          this._directionPresetRetryAfter = Date.now() + 30000;
+        }
+        // The local cache remains fully usable when Home Assistant storage is unavailable.
+        return this._directionPresetCache;
+      }
+    })();
+    return this._directionPresetHydrationPromise;
+  }
+
+  _saveDirectionPresets(presets) {
+    const key = this._presetStorageKey();
+    const normalized = this._normalizeDirectionPresets(presets);
+    this._setDirectionPresetCache(key, normalized, { writeLocal: true });
+    this._setPendingDirectionPresetSync(key, true);
+    if (!this._hass?.callWS) return Promise.resolve(false);
+
+    const generation = this._directionPresetSyncGeneration;
+    const writeRevision = ++this._directionPresetWriteRevision;
+    this._directionPresetWriteQueue = this._directionPresetWriteQueue
+      .catch(() => undefined)
+      .then(async () => {
+        if (generation !== this._directionPresetSyncGeneration || key !== this._presetStorageKey()) return false;
+        await this._hass.callWS({
+          type: "frontend/set_user_data",
+          key,
+          value: this._directionPresetPayload(normalized),
+        });
+        if (writeRevision === this._directionPresetWriteRevision) {
+          this._setPendingDirectionPresetSync(key, false);
+        }
+        return true;
+      })
+      .catch(() => false);
+    return this._directionPresetWriteQueue;
+  }
+
+  async _addDirectionPreset(name, icon, direction) {
     const trimmedName = String(name || "").trim();
     if (!trimmedName) return;
+    await this._ensureDirectionPresets();
     const normalizedIcon = String(icon || "mdi:crosshairs-gps").trim() || "mdi:crosshairs-gps";
-    const presets = this._directionPresets();
+    const presets = [...this._directionPresets()];
     presets.push({
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       name: trimmedName,
       icon: normalizedIcon.startsWith("mdi:") ? normalizedIcon : `mdi:${normalizedIcon}`,
       direction: this._normalizeAngle(direction),
     });
-    this._saveDirectionPresets(presets);
+    await this._saveDirectionPresets(presets);
   }
 
-  _removeDirectionPreset(id) {
-    this._saveDirectionPresets(this._directionPresets().filter((preset) => preset.id !== id));
+  async _removeDirectionPreset(id) {
+    await this._ensureDirectionPresets();
+    await this._saveDirectionPresets(this._directionPresets().filter((preset) => preset.id !== id));
     if (this._pendingPresetDeleteId === id) {
       this._pendingPresetDeleteId = null;
     }
@@ -2227,11 +2447,11 @@ class HaDysonCard extends HTMLElement {
       });
     });
 
-    this.shadowRoot?.querySelector("[data-preset-save]")?.addEventListener("click", () => {
+    this.shadowRoot?.querySelector("[data-preset-save]")?.addEventListener("click", async () => {
       this._syncPresetDraftFromEditor();
       const name = this._presetDraftName || this.shadowRoot?.querySelector(".preset-name-input")?.value;
       const icon = this._presetDraftIcon || this.shadowRoot?.querySelector("[data-preset-icon].active")?.dataset?.presetIcon || "mdi:crosshairs-gps";
-      this._addDirectionPreset(
+      await this._addDirectionPreset(
         name,
         icon,
         this._currentDirection(attributes),
@@ -2244,9 +2464,9 @@ class HaDysonCard extends HTMLElement {
     });
 
     this.shadowRoot?.querySelectorAll("[data-preset-delete-confirm]")?.forEach((button) => {
-      button.addEventListener("click", (event) => {
+      button.addEventListener("click", async (event) => {
         event.stopPropagation();
-        this._removeDirectionPreset(button.dataset.presetDeleteConfirm);
+        await this._removeDirectionPreset(button.dataset.presetDeleteConfirm);
         this._render();
       });
     });
@@ -2265,10 +2485,10 @@ class HaDysonCard extends HTMLElement {
     });
 
     this.shadowRoot?.querySelectorAll("[data-preset-remove]")?.forEach((button) => {
-      button.addEventListener("click", (event) => {
+      button.addEventListener("click", async (event) => {
         event.stopPropagation();
         if (this._pendingPresetDeleteId === button.dataset.presetRemove) {
-          this._removeDirectionPreset(button.dataset.presetRemove);
+          await this._removeDirectionPreset(button.dataset.presetRemove);
         } else {
           this._pendingPresetDeleteId = button.dataset.presetRemove;
         }

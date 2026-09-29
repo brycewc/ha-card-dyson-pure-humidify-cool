@@ -73,13 +73,15 @@ Each preset stores:
 - MDI icon
 - center direction
 
-Presets are saved in browser `localStorage` under a key scoped to the fan entity:
+Presets are saved in Home Assistant's per-user frontend storage under a key scoped to the fan entity:
 
 ```text
 ha-dyson-card:direction-presets:<fan entity>
 ```
 
-Direction presets are local to the browser/device. They do not sync automatically across phones, tablets, wall panels, or browsers.
+They synchronize across phones, tablets, wall panels, and browsers logged into the same Home Assistant user account. Each Home Assistant user has an independent preset collection.
+
+The card also keeps a browser `localStorage` copy as an immediate cache and fallback. Existing browser-only presets migrate automatically the first time the updated card finds no Home Assistant copy. If both copies exist, the Home Assistant copy is authoritative.
 
 ## Requirements
 
