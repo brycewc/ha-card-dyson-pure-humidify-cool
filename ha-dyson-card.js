@@ -2998,12 +2998,13 @@ class HaDysonCard extends HTMLElement {
           line-height: 1;
           z-index: 1;
         }
-        .wheel-sensor-strip:not(.expanded) {
+        .wheel-sensor-strip:not(.expanded):not(.sensor-layout-inline) {
           flex-wrap: nowrap;
           overflow-x: auto;
+          justify-content: safe center;
           scrollbar-width: none;
         }
-        .wheel-sensor-strip:not(.expanded)::-webkit-scrollbar {
+        .wheel-sensor-strip:not(.expanded):not(.sensor-layout-inline)::-webkit-scrollbar {
           display: none;
         }
         .sensor-more-button {
@@ -3802,7 +3803,7 @@ class HaDysonCard extends HTMLElement {
 
           <div class="control-shell">
             ${showSensorStrip ? `
-              <div class="wheel-sensor-strip ${this._sensorDetailsOpen ? "expanded" : ""}">
+              <div class="wheel-sensor-strip sensor-layout-${sensorDetailLayout} ${this._sensorDetailsOpen ? "expanded" : ""}">
                 ${showTempBadge ? `<span class="sensor-temp"><ha-icon icon="mdi:thermometer"></ha-icon>${this._escapeHtml(hasTempValue ? temp : "—")}${hasTempValue ? this._escapeHtml(this._unit(this._temperatureEntity(), "\u00b0")) : ""}</span>` : ""}
                 ${showHumidityBadge ? `<span class="sensor-humidity"><ha-icon icon="mdi:water-percent"></ha-icon>${this._escapeHtml(hasHumidityValue ? humidity : "—")}${hasHumidityValue ? this._escapeHtml(this._unit(this._humidityEntity(), "%")) : ""}</span>` : ""}
                 ${showAqiBadge ? `<span class="sensor-aqi ${aqiTone}"><ha-icon icon="mdi:gauge"></ha-icon>${this._escapeHtml(hasAqiValue ? aqi : "—")}</span>` : ""}
