@@ -47,6 +47,25 @@ assert.equal(typeof Card, "function", "card custom element should be registered"
 const card = new Card();
 card._config = { entity: "fan.purificateur_dyson" };
 
+card._derived = { deviceId: "dyson-device-1" };
+assert.equal(
+  card._directionPresetAutomationYaml({ name: "Bed", direction: 42 }),
+  [
+    "# Aim Dyson at Bed (40°)",
+    "- action: fan.oscillate",
+    "  target:",
+    '    entity_id: "fan.purificateur_dyson"',
+    "  data:",
+    "    oscillating: false",
+    "- action: hass_dyson.set_oscillation_angles",
+    "  data:",
+    '    device_id: "dyson-device-1"',
+    "    lower_angle: 40",
+    "    upper_angle: 40",
+  ].join("\n"),
+  "preset automation YAML should expose a stable direct-angle action sequence",
+);
+
 const registryData = {
   devices: [{ id: "dyson-device-1", name: "Purificateur Dyson" }],
   entities: [
@@ -91,6 +110,14 @@ assert.match(source, /wheel-sensor-strip sensor-layout-\$\{sensorDetailLayout\}/
 assert.match(source, /\.wheel-sensor-strip:not\(\.expanded\):not\(\.sensor-layout-inline\)/);
 assert.match(source, /justify-content:\s*safe center;/);
 assert.doesNotMatch(source, /\.wheel-sensor-strip:not\(\.expanded\)\s*\{/);
+assert.match(source, /--dyson-wheel-size:\s*min\(calc\(100% - var\(--dyson-speed-gutter\) - var\(--dyson-speed-gutter\)\), 304px\)/);
+assert.match(source, /--dyson-speed-gutter:\s*42px/);
+assert.match(source, /margin:\s*var\(--dyson-wheel-offset\) auto 0/);
+assert.match(source, /class="wheel-zero-reference"/);
+assert.match(source, /class="wheel-zero-label"/);
+assert.match(source, /const fanAvailable = !\["unknown", "unavailable"\]/);
+assert.match(source, /class="unavailable-banner"/);
+assert.match(source, /data-preset-automation/);
 
 const syncCard = new Card();
 syncCard._config = { entity: "fan.synced_dyson" };

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Center the direction wheel independently of the side-mounted airflow control.
+- Add a persistent 0° reference line and label to make the fan's forward direction unambiguous.
+- Grey out and disable the full card with a clear disconnected message when the Dyson fan entity is unavailable.
+- Show saved angles on direction preset chips and add one-tap copying of ready-to-paste Home Assistant action YAML for automations, NFC tags, scripts, and Stream Deck controls.
+
 ## 0.1.7 - 2026-09-29
 
 - Sync direction presets through Home Assistant's per-user frontend storage so they follow the same user across phones, tablets, wall panels, and browsers.

@@ -73,6 +73,8 @@ Each preset stores:
 - MDI icon
 - center direction
 
+Each preset chip displays its saved angle. Use the copy button beside a preset to copy a ready-to-paste Home Assistant action sequence. The sequence stops oscillation and sends the saved direction through `hass_dyson.set_oscillation_angles`, making it straightforward to reuse the same direction in scripts, NFC automations, or Stream Deck buttons.
+
 Presets are saved in Home Assistant's per-user frontend storage under a key scoped to the fan entity:
 
 ```text
