@@ -52,30 +52,6 @@ assert.equal(card._config.sensor_detail_layout, "inline");
 card.setConfig({ entity: "fan.purificateur_dyson", airflow_control_side: "left" });
 assert.equal(card._config.airflow_control_side, "left");
 
-card._derived = {
-  deviceId: "dyson-device-1",
-  oscillationCenterEntity: "number.purificateur_dyson_angle_centre",
-};
-assert.equal(
-  card._directionPresetAutomationYaml({ name: "Bed", direction: 42 }),
-  [
-    "# Aim Dyson at Bed (40°) without changing oscillation",
-    "- variables:",
-    '    dyson_was_oscillating: \'{{ state_attr("fan.purificateur_dyson", "oscillating") | bool(false) }}\'',
-    "- action: number.set_value",
-    "  target:",
-    '    entity_id: "number.purificateur_dyson_angle_centre"',
-    "  data:",
-    "    value: 40",
-    "- action: fan.oscillate",
-    "  target:",
-    '    entity_id: "fan.purificateur_dyson"',
-    "  data:",
-    '    oscillating: "{{ dyson_was_oscillating }}"',
-  ].join("\n"),
-  "preset automation YAML should change only the center angle",
-);
-
 const presetCommitCard = new Card();
 const presetCalls = [];
 presetCommitCard._config = { entity: "fan.purificateur_dyson" };
@@ -204,7 +180,12 @@ assert.match(source, /handleTarget\.addEventListener\("lostpointercapture",[\s\S
 assert.match(source, /\.wheel-handle-hit\s*\{[\s\S]*?width:\s*72px;[\s\S]*?height:\s*72px;[\s\S]*?touch-action:\s*none;/);
 assert.match(source, /const fanAvailable = !\["unknown", "unavailable"\]/);
 assert.match(source, /class="unavailable-banner"/);
-assert.match(source, /data-preset-automation/);
+assert.doesNotMatch(source, /data-preset-automation|direction-preset-automation|content-copy/);
+assert.match(source, /directionPresetEntity: this\._findEntityByRegistryKeys/);
+assert.match(source, /callService\("select", "select_option", \{[\s\S]*?entity_id: directionPresetEntity,[\s\S]*?option: preset\.name/);
+assert.match(source, /callService\("hass_dyson", "set_direction_presets"/);
+assert.match(source, /class="wheel-direction-value"/);
+assert.match(source, /directionValue\.textContent = `\$\{bounds\.center\}\\u00b0`/);
 assert.match(source, /\$\{confirmingDelete \? "" : `\s*<button class="direction-preset-remove"/);
 assert.doesNotMatch(source, /this\._pendingPresetDeleteId === button\.dataset\.presetRemove[\s\S]*?_removeDirectionPreset/);
 assert.match(source, /querySelectorAll\("\[data-preset-remove\]"\)[\s\S]*?this\._pendingPresetDeleteId = button\.dataset\.presetRemove;/);

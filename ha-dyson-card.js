@@ -260,6 +260,7 @@ class HaDysonCard extends HTMLElement {
     this._directionPresetSubscriptionGeneration = 0;
     this._directionPresetSyncGeneration = 0;
     this._directionPresetRetryAfter = 0;
+    this._backendPresetMigrationAttempted = false;
     this._sensorDetailsOpen = false;
   }
 
@@ -389,6 +390,7 @@ class HaDysonCard extends HTMLElement {
       nightModeEntity: this._findEntityByRegistryKeys(sameDevice, "switch", ["night_mode"], ["night mode", "night_mode", "nachtmodus", "nacht modus"]),
       climateEntity: this._findFirstEntity(sameDevice, "climate"),
       oscillationSelectEntity: this._findEntityByRegistryKeys(sameDevice, "select", ["oscillation"], ["oscillation", "oszillation"]),
+      directionPresetEntity: this._findEntityByRegistryKeys(sameDevice, "select", ["direction_preset"], ["dyson direction preset", "direction preset"]),
       oscillationLowEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["oscillation_low_angle"], ["oscillation low angle", "oscillation low", "oszillations unterwinkel", "unterwinkel"]),
       oscillationHighEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["oscillation_high_angle"], ["oscillation high angle", "oscillation high", "oszillations oberwinkel", "oberwinkel"]),
       oscillationCenterEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["oscillation_center_angle"], ["oscillation center angle", "oscillation center", "oszillations mittelwinkel", "mittelwinkel"]),
@@ -555,6 +557,10 @@ class HaDysonCard extends HTMLElement {
 
   _oscillationSelectEntity() {
     return this._derived?.oscillationSelectEntity || "";
+  }
+
+  _directionPresetEntity() {
+    return this._derived?.directionPresetEntity || "";
   }
 
   _oscillationCenterEntity() {
@@ -975,6 +981,7 @@ class HaDysonCard extends HTMLElement {
     const centerLine = wheel.querySelector(".wheel-direction-center");
     const handleCircle = wheel.querySelector(".wheel-handle");
     const handleHit = wheel.querySelector(".wheel-handle-hit");
+    const directionValue = wheel.querySelector(".wheel-direction-value");
     if (handleCircle) {
       handleCircle.setAttribute("cx", String(handle.x));
       handleCircle.setAttribute("cy", String(handle.y));
@@ -982,6 +989,9 @@ class HaDysonCard extends HTMLElement {
     if (handleHit) {
       handleHit.style.left = `${((handle.x / 320) * 100).toFixed(4)}%`;
       handleHit.style.top = `${((handle.y / 320) * 100).toFixed(4)}%`;
+    }
+    if (directionValue) {
+      directionValue.textContent = `${bounds.center}\u00b0`;
     }
     if (centerLine) {
       centerLine.setAttribute("x1", String(centerLineStart.x));
@@ -1105,9 +1115,6 @@ class HaDysonCard extends HTMLElement {
       resolving_device: "Diese Karte ermittelt noch das zugehörige Dyson-Gerät und die Begleit-Entitäten der ausgewählten Lüfter-Entität.",
       device_unavailable: "Dyson nicht verfügbar",
       device_unavailable_help: "Die Verbindung zum Gerät ist unterbrochen. Die Steuerung ist deaktiviert, bis es wieder erreichbar ist.",
-      copy_automation_action: "Automationsaktion kopieren",
-      automation_action_copied: "Automationsaktion für {name} kopiert",
-      automation_action_copy_failed: "Automationsaktion konnte nicht kopiert werden",
     };
 
     const en = {
@@ -1170,9 +1177,6 @@ class HaDysonCard extends HTMLElement {
       resolving_device: "This card is still resolving the related Dyson device and companion entities from the selected fan entity.",
       device_unavailable: "Dyson unavailable",
       device_unavailable_help: "The device is disconnected. Controls will return when it is reachable again.",
-      copy_automation_action: "Copy automation action",
-      automation_action_copied: "Copied automation action for {name}",
-      automation_action_copy_failed: "Could not copy automation action",
     };
 
     const fr = {
@@ -1235,9 +1239,6 @@ class HaDysonCard extends HTMLElement {
       resolving_device: "Cette carte recherche encore l'appareil Dyson associé et ses entités complémentaires à partir de l'entité ventilateur sélectionnée.",
       device_unavailable: "Dyson indisponible",
       device_unavailable_help: "L'appareil est déconnecté. Les commandes reviendront lorsqu'il sera de nouveau joignable.",
-      copy_automation_action: "Copier l'action d'automatisation",
-      automation_action_copied: "Action d'automatisation copiée pour {name}",
-      automation_action_copy_failed: "Impossible de copier l'action d'automatisation",
     };
 
     const locale = this._localeCode();
@@ -1591,12 +1592,24 @@ class HaDysonCard extends HTMLElement {
 
   _directionPresets() {
     const key = this._presetStorageKey();
+    const backendPresets = this._backendDirectionPresets();
+    if (backendPresets !== null && (backendPresets.length || (this._backendPresetMigrationAttempted && !this._directionPresetCache.length))) {
+      this._setDirectionPresetCache(key, backendPresets, { writeLocal: true });
+      return this._directionPresetCache;
+    }
     if (this._directionPresetCacheKey !== key) {
       this._directionPresetCacheKey = key;
       this._directionPresetCache = this._readLocalDirectionPresets(key);
       void this._ensureDirectionPresets();
     }
     return this._directionPresetCache;
+  }
+
+  _backendDirectionPresets() {
+    const entityId = this._directionPresetEntity();
+    if (!entityId) return null;
+    const presets = this._stateObj(entityId)?.attributes?.presets;
+    return Array.isArray(presets) ? this._normalizeDirectionPresets(presets) : null;
   }
 
   _stopDirectionPresetSubscription() {
@@ -1619,6 +1632,7 @@ class HaDysonCard extends HTMLElement {
     this._directionPresetWriteQueue = Promise.resolve();
     this._directionPresetWriteRevision = 0;
     this._directionPresetRetryAfter = 0;
+    this._backendPresetMigrationAttempted = false;
   }
 
   async _subscribeDirectionPresetUpdates(key, generation) {
@@ -1662,6 +1676,17 @@ class HaDysonCard extends HTMLElement {
       this._directionPresetCacheKey = key;
       this._directionPresetCache = this._readLocalDirectionPresets(key);
     }
+    const backendPresets = this._backendDirectionPresets();
+    if (backendPresets !== null && backendPresets.length) {
+      this._backendPresetMigrationAttempted = true;
+      this._stopDirectionPresetSubscription();
+      this._setDirectionPresetCache(key, backendPresets, { writeLocal: true, render: true });
+      return this._directionPresetCache;
+    }
+    if (backendPresets !== null && this._backendPresetMigrationAttempted && !this._directionPresetCache.length) {
+      this._setDirectionPresetCache(key, backendPresets, { writeLocal: true });
+      return this._directionPresetCache;
+    }
     if (!this._hass?.callWS) return this._directionPresetCache;
     if (this._directionPresetHydrationKey === key && this._directionPresetHydrationPromise) {
       return this._directionPresetHydrationPromise;
@@ -1683,6 +1708,15 @@ class HaDysonCard extends HTMLElement {
         const useLocalValue = !hasServerValue || hasPendingLocalValue;
         const presets = useLocalValue ? localPresets : this._normalizeDirectionPresets(response.value);
         this._setDirectionPresetCache(key, presets, { writeLocal: true, render: true });
+
+        if (backendPresets !== null) {
+          this._backendPresetMigrationAttempted = true;
+          this._stopDirectionPresetSubscription();
+          if (presets.length) {
+            await this._saveDirectionPresets(presets);
+          }
+          return this._directionPresetCache;
+        }
 
         if ((!hasServerValue && localPresets.length) || hasPendingLocalValue) {
           await this._hass.callWS({
@@ -1712,6 +1746,23 @@ class HaDysonCard extends HTMLElement {
     const key = this._presetStorageKey();
     const normalized = this._normalizeDirectionPresets(presets);
     this._setDirectionPresetCache(key, normalized, { writeLocal: true });
+    const directionPresetEntity = this._directionPresetEntity();
+    if (directionPresetEntity && this._deviceId() && this._hass?.callService) {
+      this._backendPresetMigrationAttempted = true;
+      const generation = this._directionPresetSyncGeneration;
+      this._directionPresetWriteQueue = this._directionPresetWriteQueue
+        .catch(() => undefined)
+        .then(async () => {
+          if (generation !== this._directionPresetSyncGeneration || key !== this._presetStorageKey()) return false;
+          await this._hass.callService("hass_dyson", "set_direction_presets", {
+            device_id: this._deviceId(),
+            presets: normalized,
+          });
+          return true;
+        })
+        .catch(() => false);
+      return this._directionPresetWriteQueue;
+    }
     this._setPendingDirectionPresetSync(key, true);
     if (!this._hass?.callWS) return Promise.resolve(false);
 
@@ -1741,12 +1792,15 @@ class HaDysonCard extends HTMLElement {
     await this._ensureDirectionPresets();
     const normalizedIcon = String(icon || "mdi:crosshairs-gps").trim() || "mdi:crosshairs-gps";
     const presets = [...this._directionPresets()];
-    presets.push({
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    const existingIndex = presets.findIndex((preset) => preset.name.toLowerCase() === trimmedName.toLowerCase());
+    const nextPreset = {
+      id: existingIndex >= 0 ? presets[existingIndex].id : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       name: trimmedName,
       icon: normalizedIcon.startsWith("mdi:") ? normalizedIcon : `mdi:${normalizedIcon}`,
       direction: this._normalizeAngle(direction),
-    });
+    };
+    if (existingIndex >= 0) presets[existingIndex] = nextPreset;
+    else presets.push(nextPreset);
     await this._saveDirectionPresets(presets);
   }
 
@@ -1758,85 +1812,12 @@ class HaDysonCard extends HTMLElement {
     }
   }
 
-  _directionPresetAutomationYaml(preset) {
-    const entityId = String(this._config.entity || "").trim();
-    const deviceId = String(this._deviceId() || "").trim();
-    if (!preset || !entityId || !deviceId) return "";
-    const angle = this._normalizeAngle(preset.direction);
-    const name = String(preset.name || `${angle}\u00b0`).trim();
-    const centerEntity = String(this._oscillationCenterEntity() || "").trim();
-    if (centerEntity) {
-      return [
-        `# Aim Dyson at ${name} (${angle}\u00b0) without changing oscillation`,
-        "- variables:",
-        `    dyson_was_oscillating: '{{ state_attr(${JSON.stringify(entityId)}, "oscillating") | bool(false) }}'`,
-        "- action: number.set_value",
-        "  target:",
-        `    entity_id: ${JSON.stringify(centerEntity)}`,
-        "  data:",
-        `    value: ${angle}`,
-        "- action: fan.oscillate",
-        "  target:",
-        `    entity_id: ${JSON.stringify(entityId)}`,
-        "  data:",
-        "    oscillating: \"{{ dyson_was_oscillating }}\"",
-      ].join("\n");
-    }
-
-    const attributes = this._stateObj(entityId)?.attributes || {};
-    const currentBounds = this._currentBounds(attributes);
-    const currentWidth = this._widthFromBounds(currentBounds) ?? this._currentWidth(attributes);
-    const bounds = this._boundsFromCenterWidth(angle, currentWidth);
-    return [
-      `# Aim Dyson at ${name} (${angle}\u00b0) without changing oscillation`,
-      "- action: hass_dyson.set_oscillation_angles",
-      "  data:",
-      `    device_id: ${JSON.stringify(deviceId)}`,
-      `    lower_angle: ${bounds.lower}`,
-      `    upper_angle: ${bounds.upper}`,
-    ].join("\n");
-  }
-
   _showToast(message) {
     this.dispatchEvent(new CustomEvent("hass-notification", {
       detail: { message },
       bubbles: true,
       composed: true,
     }));
-  }
-
-  async _copyDirectionPresetAutomation(preset) {
-    const yaml = this._directionPresetAutomationYaml(preset);
-    if (!yaml) return false;
-    let copied = false;
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(yaml);
-        copied = true;
-      }
-    } catch (_error) {
-      // Fall back to the legacy copy path for local HTTP dashboards.
-    }
-    if (!copied) {
-      const textarea = document.createElement("textarea");
-      textarea.value = yaml;
-      textarea.setAttribute("readonly", "");
-      textarea.style.position = "fixed";
-      textarea.style.opacity = "0";
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        copied = Boolean(document.execCommand("copy"));
-      } catch (_error) {
-        copied = false;
-      } finally {
-        textarea.remove();
-      }
-    }
-    this._showToast(copied
-      ? this._t("automation_action_copied", { name: preset.name })
-      : this._t("automation_action_copy_failed"));
-    return copied;
   }
 
   _clearPresetDeleteArm() {
@@ -1885,11 +1866,6 @@ class HaDysonCard extends HTMLElement {
                 ${confirmingDelete ? "" : `<ha-icon icon="${this._escapeHtml(preset.icon)}"></ha-icon>`}
                 <span>${confirmingDelete ? this._t("delete_confirm") : `${this._escapeHtml(preset.name)} <small>${preset.direction}\u00b0</small>`}</span>
               </button>
-              ${confirmingDelete ? "" : `
-                <button class="direction-preset-automation" data-preset-automation="${this._escapeHtml(preset.id)}" title="${this._escapeHtml(this._t("copy_automation_action"))}" aria-label="${this._escapeHtml(`${this._t("copy_automation_action")}: ${preset.name}`)}" ${disabled}>
-                  <ha-icon icon="mdi:content-copy"></ha-icon>
-                </button>
-              `}
               ${confirmingDelete ? "" : `
                 <button class="direction-preset-remove" data-preset-remove="${this._escapeHtml(preset.id)}" aria-label="${this._escapeHtml(`${this._t("remove_prefix")} ${preset.name}`)}">×</button>
               `}
@@ -2631,20 +2607,19 @@ class HaDysonCard extends HTMLElement {
           this._render();
           return;
         }
-        await this._commitDirection(
-          preset.direction,
-          this._currentWidth(attributes),
-          { preserveOscillation: true },
-        );
-      });
-    });
-
-    this.shadowRoot?.querySelectorAll("[data-preset-automation]")?.forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        event.stopPropagation();
-        const preset = this._directionPresets().find((candidate) => candidate.id === button.dataset.presetAutomation);
-        if (!preset) return;
-        await this._copyDirectionPresetAutomation(preset);
+        const directionPresetEntity = this._directionPresetEntity();
+        if (directionPresetEntity) {
+          await this._hass.callService("select", "select_option", {
+            entity_id: directionPresetEntity,
+            option: preset.name,
+          });
+        } else {
+          await this._commitDirection(
+            preset.direction,
+            this._currentWidth(attributes),
+            { preserveOscillation: true },
+          );
+        }
       });
     });
 
@@ -3326,8 +3301,16 @@ class HaDysonCard extends HTMLElement {
           box-shadow: var(--dyson-inner-highlight);
         }
         .speed-power-button.active {
-          border-color: color-mix(in srgb, var(--primary-color, #4f46e5) 34%, transparent);
-          background: var(--dyson-active-bg);
+          border-color: color-mix(in srgb, var(--primary-color, #03a9f4) 72%, #00bcd4 28%);
+          background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--primary-color, #03a9f4) 86%, #00bcd4 14%),
+            color-mix(in srgb, var(--primary-color, #03a9f4) 72%, #00bcd4 28%)
+          );
+          color: white;
+          box-shadow:
+            inset 0 1px 0 color-mix(in srgb, white 28%, transparent),
+            0 3px 10px color-mix(in srgb, var(--primary-color, #03a9f4) 28%, transparent);
         }
         .speed-power-button ha-icon {
           --mdc-icon-size: 18px;
@@ -3781,6 +3764,30 @@ class HaDysonCard extends HTMLElement {
           box-shadow: none;
           text-shadow: 0 0 10px color-mix(in srgb, var(--primary-color, #03a9f4) 24%, transparent);
         }
+        .wheel-direction-value {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 2;
+          min-width: 54px;
+          height: 54px;
+          padding: 0 9px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid color-mix(in srgb, var(--primary-color, #03a9f4) 30%, var(--dyson-border));
+          border-radius: 999px;
+          background: color-mix(in srgb, var(--dyson-raised-bg) 76%, transparent);
+          color: var(--primary-text-color);
+          box-shadow:
+            inset 0 1px 0 color-mix(in srgb, white 18%, transparent),
+            0 4px 12px color-mix(in srgb, #000 12%, transparent);
+          font-size: 1rem;
+          font-weight: 900;
+          letter-spacing: -0.02em;
+          pointer-events: none;
+        }
         .operation-status {
           min-height: 8px;
           display: inline-flex;
@@ -3843,7 +3850,6 @@ class HaDysonCard extends HTMLElement {
         .target-temp-input:disabled,
         .speed-slider:disabled,
         .direction-preset-button:disabled,
-        .direction-preset-automation:disabled,
         .direction-preset-add:disabled,
         .sweep-dial-option:disabled {
           opacity: 0.44;
@@ -3968,7 +3974,6 @@ class HaDysonCard extends HTMLElement {
           background: color-mix(in srgb, #ef4444 18%, var(--dyson-raised-bg));
         }
         .direction-preset-button,
-        .direction-preset-automation,
         .direction-preset-remove,
         .direction-preset-add,
         .preset-action {
@@ -4005,19 +4010,6 @@ class HaDysonCard extends HTMLElement {
           color: var(--secondary-text-color);
           font-size: 0.66rem;
           font-weight: 800;
-        }
-        .direction-preset-automation {
-          width: 34px;
-          height: 38px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0;
-          border-left: 1px solid var(--dyson-border);
-          color: var(--secondary-text-color);
-        }
-        .direction-preset-automation ha-icon {
-          --mdc-icon-size: 16px;
         }
         .direction-preset-remove {
           width: 30px;
@@ -4346,6 +4338,7 @@ class HaDysonCard extends HTMLElement {
                 <div class="wheel-center-info">
                   <div class="sweep-dial sweep-dial-active-${bounds.width}" aria-label="${this._escapeHtml(this._t("sweep_presets"))}">
                     ${(hideUnsupported && !controlReady) ? "" : presetWidths.map((preset) => this._renderSweepButton(preset, bounds.width, !controlReady)).join("")}
+                    <span class="wheel-direction-value" aria-label="${this._escapeHtml(`${bounds.center}\u00b0 ${this._t("direction")}`)}">${bounds.center}\u00b0</span>
                   </div>
                 </div>
                 <svg class="wheel-direction-handle-overlay" viewBox="0 0 320 320" aria-hidden="true">
