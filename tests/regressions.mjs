@@ -201,6 +201,10 @@ assert.match(source, /\.wheel-handle-hit\s*\{[\s\S]*?width:\s*72px;[\s\S]*?heigh
 assert.match(source, /const fanAvailable = !\["unknown", "unavailable"\]/);
 assert.match(source, /class="unavailable-banner"/);
 assert.match(source, /data-preset-automation/);
+assert.match(source, /\$\{confirmingDelete \? "" : `\s*<button class="direction-preset-remove"/);
+assert.doesNotMatch(source, /this\._pendingPresetDeleteId === button\.dataset\.presetRemove[\s\S]*?_removeDirectionPreset/);
+assert.match(source, /querySelectorAll\("\[data-preset-remove\]"\)[\s\S]*?this\._pendingPresetDeleteId = button\.dataset\.presetRemove;/);
+assert.match(source, /querySelector\("\.card"\)[\s\S]*?_clearPresetDeleteArm\(\)[\s\S]*?this\._render\(\);/);
 assert.match(source, /_renderTimerButton\(180, "3h", activeTimer\)/);
 assert.doesNotMatch(source, /_renderTimerButton\(240, "4h", activeTimer\)/);
 

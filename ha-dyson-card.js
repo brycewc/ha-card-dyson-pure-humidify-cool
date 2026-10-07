@@ -1887,7 +1887,9 @@ class HaDysonCard extends HTMLElement {
                   <ha-icon icon="mdi:content-copy"></ha-icon>
                 </button>
               `}
-              <button class="direction-preset-remove" data-preset-remove="${this._escapeHtml(preset.id)}" aria-label="${confirmingDelete ? this._escapeHtml(this._t("delete_direction_preset")) : this._escapeHtml(`${this._t("remove_prefix")} ${preset.name}`)}">${confirmingDelete ? "×" : "×"}</button>
+              ${confirmingDelete ? "" : `
+                <button class="direction-preset-remove" data-preset-remove="${this._escapeHtml(preset.id)}" aria-label="${this._escapeHtml(`${this._t("remove_prefix")} ${preset.name}`)}">×</button>
+              `}
             </div>
           `;
           }).join("") : `<span class="direction-presets-empty">${this._t("no_direction_presets_saved")}</span>`}
@@ -2644,13 +2646,9 @@ class HaDysonCard extends HTMLElement {
     });
 
     this.shadowRoot?.querySelectorAll("[data-preset-remove]")?.forEach((button) => {
-      button.addEventListener("click", async (event) => {
+      button.addEventListener("click", (event) => {
         event.stopPropagation();
-        if (this._pendingPresetDeleteId === button.dataset.presetRemove) {
-          await this._removeDirectionPreset(button.dataset.presetRemove);
-        } else {
-          this._pendingPresetDeleteId = button.dataset.presetRemove;
-        }
+        this._pendingPresetDeleteId = button.dataset.presetRemove;
         this._render();
       });
     });
@@ -4023,10 +4021,6 @@ class HaDysonCard extends HTMLElement {
           color: var(--secondary-text-color);
           border-left: 1px solid var(--dyson-border);
           font-size: 1rem;
-        }
-        .direction-preset-item.confirm-delete .direction-preset-remove {
-          color: #ef4444;
-          border-left-color: color-mix(in srgb, #ef4444 54%, transparent);
         }
         .direction-preset-add {
           flex: 0 0 auto;
