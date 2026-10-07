@@ -2,10 +2,38 @@
 
 ## Unreleased
 
-- Center the direction wheel independently of the side-mounted airflow control.
-- Add a persistent 0° reference line and label to make the fan's forward direction unambiguous.
-- Grey out and disable the full card with a clear disconnected message when the Dyson fan entity is unavailable.
-- Show saved angles on direction preset chips and add one-tap copying of ready-to-paste Home Assistant action YAML for automations, NFC tags, scripts, and Stream Deck controls.
+### Added
+
+- Native direction presets for Home Assistant automations when supported by the installed `hass_dyson` integration.
+- A live direction readout in the center of the sweep dial.
+- Saved angles on direction preset buttons.
+- A clear disconnected state that disables the card while the Dyson is unavailable.
+- Inline, left, and right layouts for the combined power and fan-speed controls. Inline is the new default.
+
+### Improved
+
+- Direction presets now move the center of the current sweep without changing its width or turning oscillation on or off.
+- Direction dragging is more reliable on touchscreens and no longer scrolls the surrounding popup during a drag.
+- The direct-mode indicator follows the selected direction and stays behind the numbered dial and preset markers.
+- The active power button is easier to distinguish while the remaining card icons keep their original colors.
+- Sensor details now use the inline layout by default.
+- Sleep-timer shortcuts are now 1h, 2h, and 3h.
+
+### Fixed
+
+- Prevented Home Assistant state updates from interrupting an active direction drag and snapping the handle back.
+- Corrected the stacking order of the direction line, current handle, and saved preset markers.
+- Removed the misleading close icon from the preset deletion confirmation state.
+
+### Changed
+
+- Removed the per-preset YAML copy button. Native Home Assistant actions can now recall a saved direction by name when the installed `hass_dyson` integration provides direction-preset support.
+- Existing card presets migrate to the native direction-preset entity when it becomes available. The previous Home Assistant user-storage method remains available as a fallback.
+
+### Compatibility
+
+- The card still works with standard `hass_dyson` installations. Native preset entities and the **Set Direction Preset** action require a `hass_dyson` version that provides those features.
+- On systems with multiple Dysons, the named-preset action may show presets from more than one device. Use Home Assistant's **Select option** action with the target device's direction-preset entity for a strictly device-specific list.
 
 ## 0.1.7 - 2026-09-29
 

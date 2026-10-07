@@ -50,10 +50,10 @@ The goal is to make the Dyson feel like a polished Home Assistant appliance cont
 - Direction wheel with drag-to-aim control
 - Sweep dial presets for direct, 45°, 90°, 180°, and wide sweep
 - Direction presets with custom name and MDI icon
-- Vertical airflow speed control with power button
+- Inline airflow speed control with power button by default
 - Auto mode, night mode, airflow direction, and sleep timer controls
 - Heat, fan-only, and target temperature controls when a climate entity exists
-- Optional left or right placement for the airflow speed control
+- Optional left or right placement for the power and airflow speed controls
 
 ### Live Information
 
@@ -73,22 +73,28 @@ Each preset stores:
 - MDI icon
 - center direction
 
-Each preset chip displays its saved angle. Use the copy button beside a preset to copy a ready-to-paste Home Assistant action sequence. The sequence stops oscillation and sends the saved direction through `hass_dyson.set_oscillation_angles`, making it straightforward to reuse the same direction in scripts, NFC automations, or Stream Deck buttons.
+Each preset chip displays its saved angle. When supported by the installed Dyson integration, presets are exposed through a native `select.*_direction_preset` entity so the same names are available to dashboards, scripts, NFC automations, voice routines, and Stream Deck buttons. Existing card presets migrate automatically when the native entity becomes available. Otherwise, the card continues using its previous Home Assistant user-storage fallback.
 
-Presets are saved in Home Assistant's per-user frontend storage under a key scoped to the fan entity:
+### Direction Preset Automations
 
-```text
-ha-dyson-card:direction-presets:<fan entity>
+Search for **Set Direction Preset** in Home Assistant's action picker, select the Dyson device, and choose the saved name from the **Preset** dropdown. The action changes the center direction while preserving the current sweep width and whether oscillation is on or off.
+
+```yaml
+action: hass_dyson.set_direction_preset
+data:
+  device_id: YOUR_DYSON_DEVICE_ID
+  preset: Bed
 ```
 
-They synchronize across phones, tablets, wall panels, and browsers logged into the same Home Assistant user account. Each Home Assistant user has an independent preset collection.
+![Selecting a Dyson direction preset in a Home Assistant automation](.github/images/direction-preset-automation.jpg)
 
-The card also keeps a browser `localStorage` copy as an immediate cache and fallback. Existing browser-only presets migrate automatically the first time the updated card finds no Home Assistant copy. If both copies exist, the Home Assistant copy is authoritative.
+Home Assistant action fields cannot make one field's options depend dynamically on a separately selected device. On systems with multiple Dyson devices, the custom action therefore shows the combined preset names from all loaded Dysons and validates the chosen name against the selected device when it runs. To guarantee a device-specific dropdown in that situation, use Home Assistant's generic **Select option** action and target that device's `select.*_direction_preset` entity.
 
 ## Requirements
 
 - Home Assistant 2024.8.0 or newer
 - [`hass_dyson`](https://github.com/cmgrayb/hass-dyson) installed and configured
+- Optional native preset automation requires a `hass_dyson` version that exposes a `select.*_direction_preset` entity plus the `hass_dyson.set_direction_preset` and `hass_dyson.set_direction_presets` actions
 - A Dyson `fan.` entity from `hass_dyson`
 - Related Dyson entities attached to the same Home Assistant device for the best experience
 
@@ -160,6 +166,7 @@ sensor_detail_layout: inline
 | Sleep timer | `hass_dyson.set_sleep_timer` |
 | Direction wheel | `hass_dyson.set_oscillation_angles` or oscillation number entities |
 | Sweep dial | oscillation select entity or angle services |
+| Saved direction preset | `hass_dyson.set_direction_preset` or `select.select_option` |
 | Heat / Fan only | `climate.set_hvac_mode` |
 | Target temperature | `climate.set_temperature` |
 
