@@ -114,8 +114,12 @@ assert.match(source, /--dyson-wheel-size:\s*min\(calc\(100% - var\(--dyson-speed
 assert.match(source, /--dyson-speed-gutter:\s*42px/);
 assert.match(source, /margin:\s*var\(--dyson-wheel-offset\) auto 0/);
 assert.match(source, /class="wheel-direction-center"/);
-assert.match(source, /const centerLineInner = this\._pointForAngle\(160, 160, 52, visualCenter\)/);
-assert.match(source, /const centerLineOuter = this\._pointForAngle\(160, 160, 116, visualCenter\)/);
+assert.match(source, /class="wheel-direction-overlay"/);
+assert.match(source, /const centerLineEnd = this\._pointForAngle\(160, 160, 115, visualCenter\)/);
+assert.match(source, /class="wheel-direction-center" x1="160" y1="160"/);
+assert.match(source, /centerLine\.setAttribute\("x2", String\(centerLineEnd\.x\)\)/);
+assert.match(source, /centerLine\.style\.display = "none"/);
+assert.match(source, /bounds\.width === 0 \? "" : "display:none;"/);
 assert.doesNotMatch(source, /wheel-zero-reference|wheel-zero-label|>0°</);
 assert.match(source, /const fanAvailable = !\["unknown", "unavailable"\]/);
 assert.match(source, /class="unavailable-banner"/);

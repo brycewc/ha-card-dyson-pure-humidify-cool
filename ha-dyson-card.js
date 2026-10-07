@@ -958,9 +958,11 @@ class HaDysonCard extends HTMLElement {
     const wheel = this.shadowRoot;
     if (!wheel) return;
     const bounds = this._boundsFromCenterWidth(direction, width);
-    const handle = this._pointForAngle(160, 160, 128, this._visualAngleFromDevice(bounds.center));
+    const visualCenter = this._visualAngleFromDevice(bounds.center);
+    const handle = this._pointForAngle(160, 160, 128, visualCenter);
+    const centerLineEnd = this._pointForAngle(160, 160, 115, visualCenter);
     const cone = wheel.querySelector(".wheel-cone");
-    const direct = wheel.querySelector(".wheel-direct");
+    const centerLine = wheel.querySelector(".wheel-direction-center");
     const handleCircle = wheel.querySelector(".wheel-handle");
     const handleHit = wheel.querySelector(".wheel-handle-hit");
     if (handleCircle) {
@@ -971,16 +973,18 @@ class HaDysonCard extends HTMLElement {
       handleHit.style.left = `${((handle.x / 320) * 100).toFixed(4)}%`;
       handleHit.style.top = `${((handle.y / 320) * 100).toFixed(4)}%`;
     }
+    if (centerLine) {
+      centerLine.setAttribute("x2", String(centerLineEnd.x));
+      centerLine.setAttribute("y2", String(centerLineEnd.y));
+    }
 
     if (bounds.width === 0) {
       if (cone) {
         cone.setAttribute("d", "");
         cone.style.display = "none";
       }
-      if (direct) {
-        const visualCenter = this._visualAngleFromDevice(bounds.center);
-        direct.setAttribute("d", this._arcPath(160, 160, 116, visualCenter - 1, visualCenter + 1));
-        direct.style.display = "";
+      if (centerLine) {
+        centerLine.style.display = "";
       }
       return;
     }
@@ -989,8 +993,8 @@ class HaDysonCard extends HTMLElement {
       cone.setAttribute("d", this._sectorPath(160, 160, 128, this._visualAngleFromDevice(bounds.lower), this._visualAngleFromDevice(bounds.upper)));
       cone.style.display = "";
     }
-    if (direct) {
-      direct.style.display = "none";
+    if (centerLine) {
+      centerLine.style.display = "none";
     }
   }
 
@@ -2766,8 +2770,7 @@ class HaDysonCard extends HTMLElement {
     const lowerLimitOuter = this._pointForAngle(160, 160, 132, 5);
     const upperLimitInner = this._pointForAngle(160, 160, 54, 355);
     const upperLimitOuter = this._pointForAngle(160, 160, 132, 355);
-    const centerLineInner = this._pointForAngle(160, 160, 52, visualCenter);
-    const centerLineOuter = this._pointForAngle(160, 160, 116, visualCenter);
+    const centerLineEnd = this._pointForAngle(160, 160, 115, visualCenter);
     const conePath = bounds.width
       ? this._sectorPath(160, 160, 128, this._visualAngleFromDevice(bounds.lower), this._visualAngleFromDevice(bounds.upper))
       : "";
@@ -3050,6 +3053,15 @@ class HaDysonCard extends HTMLElement {
           stroke-linecap: round;
           pointer-events: none;
           filter: drop-shadow(0 0 3px color-mix(in srgb, var(--primary-color, #4f46e5) 38%, transparent));
+        }
+        .wheel-direction-overlay {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 4;
+          pointer-events: none;
+          overflow: visible;
         }
         .wheel-cone {
           fill: var(--dyson-cone-bg);
@@ -4201,7 +4213,6 @@ class HaDysonCard extends HTMLElement {
                     <line class="wheel-limit" x1="${lowerLimitInner.x}" y1="${lowerLimitInner.y}" x2="${lowerLimitOuter.x}" y2="${lowerLimitOuter.y}"></line>
                     <line class="wheel-limit" x1="${upperLimitInner.x}" y1="${upperLimitInner.y}" x2="${upperLimitOuter.x}" y2="${upperLimitOuter.y}"></line>
                     <path class="wheel-cone" d="${conePath}" style="${bounds.width ? "" : "display:none;"}"></path>
-                    <line class="wheel-direction-center" x1="${centerLineInner.x}" y1="${centerLineInner.y}" x2="${centerLineOuter.x}" y2="${centerLineOuter.y}"></line>
                     <circle class="wheel-core" cx="160" cy="160" r="48"></circle>
                     <circle class="wheel-core-inner" cx="160" cy="160" r="36"></circle>
                     ${operationActive ? `<circle class="wheel-spinner" cx="160" cy="160" r="42"></circle>` : ""}
@@ -4215,6 +4226,9 @@ class HaDysonCard extends HTMLElement {
                     ${(hideUnsupported && !controlReady) ? "" : presetWidths.map((preset) => this._renderSweepButton(preset, bounds.width, !controlReady)).join("")}
                   </div>
                 </div>
+                <svg class="wheel-direction-overlay" viewBox="0 0 320 320" aria-hidden="true">
+                  <line class="wheel-direction-center" x1="160" y1="160" x2="${centerLineEnd.x}" y2="${centerLineEnd.y}" style="${bounds.width === 0 ? "" : "display:none;"}"></line>
+                </svg>
               </div>
               <div class="wheel-speed">
                 <div class="speed-control" style="--speed-fill: ${speedPercent}%;">
