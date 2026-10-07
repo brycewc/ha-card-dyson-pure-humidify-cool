@@ -4,9 +4,9 @@ class HaDysonCard extends HTMLElement {
   static getStubConfig() {
     return {
       entity: "fan.my_dyson",
-      airflow_control_side: "right",
+      airflow_control_side: "inline",
       language: "auto",
-      sensor_detail_layout: "panel",
+      sensor_detail_layout: "inline",
     };
   }
 
@@ -68,6 +68,10 @@ class HaDysonCard extends HTMLElement {
             select: {
               mode: "dropdown",
               options: [
+                {
+                  value: "inline",
+                  label: t("Inline", "Inline", "En ligne"),
+                },
                 {
                   value: "right",
                   label: t("Rechts", "Right", "Droite"),
@@ -150,7 +154,11 @@ class HaDysonCard extends HTMLElement {
           case "language":
             return t("Sprache", "Language", "Langue");
           case "airflow_control_side":
-            return t("Luftstrom-Reglerseite", "Airflow control side", "Côté du réglage du flux d'air");
+            return t(
+              "Position von Leistung und Lüftergeschwindigkeit",
+              "Power and fan speed position",
+              "Position de l'alimentation et de la vitesse"
+            );
           case "hide_unsupported":
             return t(
               "Nicht unterstützte Steuerelemente ausblenden",
@@ -171,9 +179,9 @@ class HaDysonCard extends HTMLElement {
         switch (schema.name) {
           case "airflow_control_side":
             return t(
-              "Platziert den vertikalen Luftstrom-Regler rechts oder links am Richtungsrad.",
-              "Places the vertical airflow speed control on the right or left side of the direction wheel.",
-              "Place le réglage vertical de la vitesse du flux d'air à droite ou à gauche de la molette de direction."
+              "Inline ist die Standardeinstellung. Links und Rechts platzieren die Regler vertikal neben dem Richtungsrad.",
+              "Inline is the default. Left and Right place the controls vertically beside the direction wheel.",
+              "En ligne est la valeur par défaut. Gauche et Droite placent les commandes verticalement à côté de la molette."
             );
           case "language":
             return t(
@@ -221,6 +229,7 @@ class HaDysonCard extends HTMLElement {
     this._draftDirection = null;
     this._draftWidth = null;
     this._draggingDial = false;
+    this._renderPendingAfterDrag = false;
     this._derived = null;
     this._pendingDirection = null;
     this._pendingWidth = null;
@@ -251,6 +260,7 @@ class HaDysonCard extends HTMLElement {
     this._directionPresetSubscriptionGeneration = 0;
     this._directionPresetSyncGeneration = 0;
     this._directionPresetRetryAfter = 0;
+    this._backendPresetMigrationAttempted = false;
     this._sensorDetailsOpen = false;
   }
 
@@ -275,11 +285,11 @@ class HaDysonCard extends HTMLElement {
     const previousEntity = this._config.entity || "";
     this._config = {
       title: "",
-      airflow_control_side: "right",
+      airflow_control_side: "inline",
       hide_unsupported: hideUnsupported,
       hide_empty_sensors: hideEmptySensors,
       sensor_more_button_threshold: sensorMoreButtonThreshold,
-      sensor_detail_layout: "panel",
+      sensor_detail_layout: "inline",
       ...config,
     };
     this._config.hide_unsupported = hideUnsupported;
@@ -380,6 +390,7 @@ class HaDysonCard extends HTMLElement {
       nightModeEntity: this._findEntityByRegistryKeys(sameDevice, "switch", ["night_mode"], ["night mode", "night_mode", "nachtmodus", "nacht modus"]),
       climateEntity: this._findFirstEntity(sameDevice, "climate"),
       oscillationSelectEntity: this._findEntityByRegistryKeys(sameDevice, "select", ["oscillation"], ["oscillation", "oszillation"]),
+      directionPresetEntity: this._findEntityByRegistryKeys(sameDevice, "select", ["direction_preset"], ["dyson direction preset", "direction preset"]),
       oscillationLowEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["oscillation_low_angle"], ["oscillation low angle", "oscillation low", "oszillations unterwinkel", "unterwinkel"]),
       oscillationHighEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["oscillation_high_angle"], ["oscillation high angle", "oscillation high", "oszillations oberwinkel", "oberwinkel"]),
       oscillationCenterEntity: this._findEntityByRegistryKeys(sameDevice, "number", ["oscillation_center_angle"], ["oscillation center angle", "oscillation center", "oszillations mittelwinkel", "mittelwinkel"]),
@@ -546,6 +557,10 @@ class HaDysonCard extends HTMLElement {
 
   _oscillationSelectEntity() {
     return this._derived?.oscillationSelectEntity || "";
+  }
+
+  _directionPresetEntity() {
+    return this._derived?.directionPresetEntity || "";
   }
 
   _oscillationCenterEntity() {
@@ -958,11 +973,15 @@ class HaDysonCard extends HTMLElement {
     const wheel = this.shadowRoot;
     if (!wheel) return;
     const bounds = this._boundsFromCenterWidth(direction, width);
-    const handle = this._pointForAngle(160, 160, 128, this._visualAngleFromDevice(bounds.center));
+    const visualCenter = this._visualAngleFromDevice(bounds.center);
+    const handle = this._pointForAngle(160, 160, 128, visualCenter);
+    const centerLineStart = this._pointForAngle(160, 160, 82, visualCenter);
+    const centerLineEnd = this._pointForAngle(160, 160, 115, visualCenter);
     const cone = wheel.querySelector(".wheel-cone");
-    const direct = wheel.querySelector(".wheel-direct");
+    const centerLine = wheel.querySelector(".wheel-direction-center");
     const handleCircle = wheel.querySelector(".wheel-handle");
     const handleHit = wheel.querySelector(".wheel-handle-hit");
+    const directionValue = wheel.querySelector(".wheel-direction-value");
     if (handleCircle) {
       handleCircle.setAttribute("cx", String(handle.x));
       handleCircle.setAttribute("cy", String(handle.y));
@@ -971,16 +990,23 @@ class HaDysonCard extends HTMLElement {
       handleHit.style.left = `${((handle.x / 320) * 100).toFixed(4)}%`;
       handleHit.style.top = `${((handle.y / 320) * 100).toFixed(4)}%`;
     }
+    if (directionValue) {
+      directionValue.textContent = `${bounds.center}\u00b0`;
+    }
+    if (centerLine) {
+      centerLine.setAttribute("x1", String(centerLineStart.x));
+      centerLine.setAttribute("y1", String(centerLineStart.y));
+      centerLine.setAttribute("x2", String(centerLineEnd.x));
+      centerLine.setAttribute("y2", String(centerLineEnd.y));
+    }
 
     if (bounds.width === 0) {
       if (cone) {
         cone.setAttribute("d", "");
         cone.style.display = "none";
       }
-      if (direct) {
-        const visualCenter = this._visualAngleFromDevice(bounds.center);
-        direct.setAttribute("d", this._arcPath(160, 160, 116, visualCenter - 1, visualCenter + 1));
-        direct.style.display = "";
+      if (centerLine) {
+        centerLine.style.display = "";
       }
       return;
     }
@@ -989,8 +1015,8 @@ class HaDysonCard extends HTMLElement {
       cone.setAttribute("d", this._sectorPath(160, 160, 128, this._visualAngleFromDevice(bounds.lower), this._visualAngleFromDevice(bounds.upper)));
       cone.style.display = "";
     }
-    if (direct) {
-      direct.style.display = "none";
+    if (centerLine) {
+      centerLine.style.display = "none";
     }
   }
 
@@ -1087,6 +1113,8 @@ class HaDysonCard extends HTMLElement {
       decrease_target_temperature: "Zieltemperatur verringern",
       increase_target_temperature: "Zieltemperatur erhöhen",
       resolving_device: "Diese Karte ermittelt noch das zugehörige Dyson-Gerät und die Begleit-Entitäten der ausgewählten Lüfter-Entität.",
+      device_unavailable: "Dyson nicht verfügbar",
+      device_unavailable_help: "Die Verbindung zum Gerät ist unterbrochen. Die Steuerung ist deaktiviert, bis es wieder erreichbar ist.",
     };
 
     const en = {
@@ -1147,6 +1175,8 @@ class HaDysonCard extends HTMLElement {
       decrease_target_temperature: "Decrease target temperature",
       increase_target_temperature: "Increase target temperature",
       resolving_device: "This card is still resolving the related Dyson device and companion entities from the selected fan entity.",
+      device_unavailable: "Dyson unavailable",
+      device_unavailable_help: "The device is disconnected. Controls will return when it is reachable again.",
     };
 
     const fr = {
@@ -1207,6 +1237,8 @@ class HaDysonCard extends HTMLElement {
       decrease_target_temperature: "Diminuer la température de consigne",
       increase_target_temperature: "Augmenter la température de consigne",
       resolving_device: "Cette carte recherche encore l'appareil Dyson associé et ses entités complémentaires à partir de l'entité ventilateur sélectionnée.",
+      device_unavailable: "Dyson indisponible",
+      device_unavailable_help: "L'appareil est déconnecté. Les commandes reviendront lorsqu'il sera de nouveau joignable.",
     };
 
     const locale = this._localeCode();
@@ -1270,7 +1302,7 @@ class HaDysonCard extends HTMLElement {
   }
 
   _sensorDetailLayout() {
-    const value = String(this._config?.sensor_detail_layout || "panel").trim().toLowerCase();
+    const value = String(this._config?.sensor_detail_layout || "inline").trim().toLowerCase();
     return value === "inline" ? "inline" : "panel";
   }
 
@@ -1560,12 +1592,24 @@ class HaDysonCard extends HTMLElement {
 
   _directionPresets() {
     const key = this._presetStorageKey();
+    const backendPresets = this._backendDirectionPresets();
+    if (backendPresets !== null && (backendPresets.length || (this._backendPresetMigrationAttempted && !this._directionPresetCache.length))) {
+      this._setDirectionPresetCache(key, backendPresets, { writeLocal: true });
+      return this._directionPresetCache;
+    }
     if (this._directionPresetCacheKey !== key) {
       this._directionPresetCacheKey = key;
       this._directionPresetCache = this._readLocalDirectionPresets(key);
       void this._ensureDirectionPresets();
     }
     return this._directionPresetCache;
+  }
+
+  _backendDirectionPresets() {
+    const entityId = this._directionPresetEntity();
+    if (!entityId) return null;
+    const presets = this._stateObj(entityId)?.attributes?.presets;
+    return Array.isArray(presets) ? this._normalizeDirectionPresets(presets) : null;
   }
 
   _stopDirectionPresetSubscription() {
@@ -1588,6 +1632,7 @@ class HaDysonCard extends HTMLElement {
     this._directionPresetWriteQueue = Promise.resolve();
     this._directionPresetWriteRevision = 0;
     this._directionPresetRetryAfter = 0;
+    this._backendPresetMigrationAttempted = false;
   }
 
   async _subscribeDirectionPresetUpdates(key, generation) {
@@ -1631,6 +1676,17 @@ class HaDysonCard extends HTMLElement {
       this._directionPresetCacheKey = key;
       this._directionPresetCache = this._readLocalDirectionPresets(key);
     }
+    const backendPresets = this._backendDirectionPresets();
+    if (backendPresets !== null && backendPresets.length) {
+      this._backendPresetMigrationAttempted = true;
+      this._stopDirectionPresetSubscription();
+      this._setDirectionPresetCache(key, backendPresets, { writeLocal: true, render: true });
+      return this._directionPresetCache;
+    }
+    if (backendPresets !== null && this._backendPresetMigrationAttempted && !this._directionPresetCache.length) {
+      this._setDirectionPresetCache(key, backendPresets, { writeLocal: true });
+      return this._directionPresetCache;
+    }
     if (!this._hass?.callWS) return this._directionPresetCache;
     if (this._directionPresetHydrationKey === key && this._directionPresetHydrationPromise) {
       return this._directionPresetHydrationPromise;
@@ -1652,6 +1708,15 @@ class HaDysonCard extends HTMLElement {
         const useLocalValue = !hasServerValue || hasPendingLocalValue;
         const presets = useLocalValue ? localPresets : this._normalizeDirectionPresets(response.value);
         this._setDirectionPresetCache(key, presets, { writeLocal: true, render: true });
+
+        if (backendPresets !== null) {
+          this._backendPresetMigrationAttempted = true;
+          this._stopDirectionPresetSubscription();
+          if (presets.length) {
+            await this._saveDirectionPresets(presets);
+          }
+          return this._directionPresetCache;
+        }
 
         if ((!hasServerValue && localPresets.length) || hasPendingLocalValue) {
           await this._hass.callWS({
@@ -1681,6 +1746,23 @@ class HaDysonCard extends HTMLElement {
     const key = this._presetStorageKey();
     const normalized = this._normalizeDirectionPresets(presets);
     this._setDirectionPresetCache(key, normalized, { writeLocal: true });
+    const directionPresetEntity = this._directionPresetEntity();
+    if (directionPresetEntity && this._deviceId() && this._hass?.callService) {
+      this._backendPresetMigrationAttempted = true;
+      const generation = this._directionPresetSyncGeneration;
+      this._directionPresetWriteQueue = this._directionPresetWriteQueue
+        .catch(() => undefined)
+        .then(async () => {
+          if (generation !== this._directionPresetSyncGeneration || key !== this._presetStorageKey()) return false;
+          await this._hass.callService("hass_dyson", "set_direction_presets", {
+            device_id: this._deviceId(),
+            presets: normalized,
+          });
+          return true;
+        })
+        .catch(() => false);
+      return this._directionPresetWriteQueue;
+    }
     this._setPendingDirectionPresetSync(key, true);
     if (!this._hass?.callWS) return Promise.resolve(false);
 
@@ -1710,12 +1792,15 @@ class HaDysonCard extends HTMLElement {
     await this._ensureDirectionPresets();
     const normalizedIcon = String(icon || "mdi:crosshairs-gps").trim() || "mdi:crosshairs-gps";
     const presets = [...this._directionPresets()];
-    presets.push({
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    const existingIndex = presets.findIndex((preset) => preset.name.toLowerCase() === trimmedName.toLowerCase());
+    const nextPreset = {
+      id: existingIndex >= 0 ? presets[existingIndex].id : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       name: trimmedName,
       icon: normalizedIcon.startsWith("mdi:") ? normalizedIcon : `mdi:${normalizedIcon}`,
       direction: this._normalizeAngle(direction),
-    });
+    };
+    if (existingIndex >= 0) presets[existingIndex] = nextPreset;
+    else presets.push(nextPreset);
     await this._saveDirectionPresets(presets);
   }
 
@@ -1725,6 +1810,14 @@ class HaDysonCard extends HTMLElement {
     if (this._pendingPresetDeleteId === id) {
       this._pendingPresetDeleteId = null;
     }
+  }
+
+  _showToast(message) {
+    this.dispatchEvent(new CustomEvent("hass-notification", {
+      detail: { message },
+      bubbles: true,
+      composed: true,
+    }));
   }
 
   _clearPresetDeleteArm() {
@@ -1771,9 +1864,11 @@ class HaDysonCard extends HTMLElement {
             <div class="direction-preset-item ${confirmingDelete ? "confirm-delete" : ""}">
               <button class="direction-preset-button" ${confirmingDelete ? `data-preset-delete-confirm="${this._escapeHtml(preset.id)}" title="${this._escapeHtml(this._t("delete_direction_preset"))}"` : `data-preset-apply="${this._escapeHtml(preset.id)}" title="${this._escapeHtml(`${preset.direction}\u00b0 ${this._t("direction")}`)}"`} ${disabled}>
                 ${confirmingDelete ? "" : `<ha-icon icon="${this._escapeHtml(preset.icon)}"></ha-icon>`}
-                <span>${confirmingDelete ? this._t("delete_confirm") : this._escapeHtml(preset.name)}</span>
+                <span>${confirmingDelete ? this._t("delete_confirm") : `${this._escapeHtml(preset.name)} <small>${preset.direction}\u00b0</small>`}</span>
               </button>
-              <button class="direction-preset-remove" data-preset-remove="${this._escapeHtml(preset.id)}" aria-label="${confirmingDelete ? this._escapeHtml(this._t("delete_direction_preset")) : this._escapeHtml(`${this._t("remove_prefix")} ${preset.name}`)}">${confirmingDelete ? "×" : "×"}</button>
+              ${confirmingDelete ? "" : `
+                <button class="direction-preset-remove" data-preset-remove="${this._escapeHtml(preset.id)}" aria-label="${this._escapeHtml(`${this._t("remove_prefix")} ${preset.name}`)}">×</button>
+              `}
             </div>
           `;
           }).join("") : `<span class="direction-presets-empty">${this._t("no_direction_presets_saved")}</span>`}
@@ -2124,9 +2219,11 @@ class HaDysonCard extends HTMLElement {
     }
   }
 
-  async _commitDirection(direction, width) {
+  async _commitDirection(direction, width, { preserveOscillation = false } = {}) {
     const deviceId = this._deviceId();
     if (!this._hass || !deviceId || this._busy) return;
+    const attributes = this._stateObj(this._config.entity)?.attributes || {};
+    const previousOscillation = preserveOscillation ? this._oscillationEnabled(attributes) : null;
     const bounds = this._boundsFromCenterWidth(direction, width);
     const { lower, upper, center, width: normalizedWidth } = bounds;
     const directMode = normalizedWidth === 0;
@@ -2144,8 +2241,13 @@ class HaDysonCard extends HTMLElement {
     this._render();
 
     try {
-      if (directMode) {
-        if (fanOn) {
+      if (preserveOscillation && this._oscillationCenterEntity()) {
+        await this._hass.callService("number", "set_value", {
+          entity_id: this._oscillationCenterEntity(),
+          value: center,
+        });
+      } else if (directMode) {
+        if (fanOn && !preserveOscillation) {
           await this._hass.callService("fan", "oscillate", {
             entity_id: this._config.entity,
             oscillating: false,
@@ -2161,7 +2263,7 @@ class HaDysonCard extends HTMLElement {
           entity_id: this._oscillationCenterEntity(),
           value: center,
         });
-        if (fanOn) {
+        if (fanOn && !preserveOscillation) {
           await this._hass.callService("fan", "oscillate", {
             entity_id: this._config.entity,
             oscillating: true,
@@ -2173,12 +2275,18 @@ class HaDysonCard extends HTMLElement {
           lower_angle: lower,
           upper_angle: upper,
         });
-        if (fanOn) {
+        if (fanOn && !preserveOscillation) {
           await this._hass.callService("fan", "oscillate", {
             entity_id: this._config.entity,
             oscillating: true,
           });
         }
+      }
+      if (preserveOscillation && typeof previousOscillation === "boolean") {
+        await this._hass.callService("fan", "oscillate", {
+          entity_id: this._config.entity,
+          oscillating: previousOscillation,
+        });
       }
       this._settleDirectionCommand(center, normalizedWidth, false);
     } catch (error) {
@@ -2234,6 +2342,7 @@ class HaDysonCard extends HTMLElement {
 
     handleTarget.addEventListener("pointerdown", (event) => {
       event.preventDefault();
+      event.stopPropagation();
       this._draggingDial = true;
       handleTarget.setPointerCapture?.(event.pointerId);
       updateDraft(event);
@@ -2242,20 +2351,35 @@ class HaDysonCard extends HTMLElement {
     handleTarget.addEventListener("pointermove", (event) => {
       if (!this._draggingDial) return;
       event.preventDefault();
+      event.stopPropagation();
       updateDraft(event);
     });
 
     const finish = async (event) => {
       if (!this._draggingDial) return;
       event.preventDefault();
-      this._draggingDial = false;
-      handleTarget.releasePointerCapture?.(event.pointerId);
+      event.stopPropagation();
       updateDraft(event);
+      this._draggingDial = false;
+      if (handleTarget.hasPointerCapture?.(event.pointerId)) {
+        handleTarget.releasePointerCapture(event.pointerId);
+      }
       await this._commitDirection(draftDirection, currentWidth);
+      if (this._renderPendingAfterDrag) this._render();
     };
 
     handleTarget.addEventListener("pointerup", finish);
-    handleTarget.addEventListener("pointercancel", () => {
+    handleTarget.addEventListener("pointercancel", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this._draggingDial = false;
+      this._draftDirection = null;
+      this._draftWidth = null;
+      this._render();
+    });
+    handleTarget.addEventListener("lostpointercapture", (event) => {
+      if (!this._draggingDial) return;
+      event.stopPropagation();
       this._draggingDial = false;
       this._draftDirection = null;
       this._draftWidth = null;
@@ -2316,8 +2440,11 @@ class HaDysonCard extends HTMLElement {
     };
     const speedFromPointer = (event) => {
       const rect = speedControl?.getBoundingClientRect();
-      if (!rect?.height) return this._currentSpeed(attributes);
-      const raw = 100 - (((event.clientY - rect.top) / rect.height) * 100);
+      if (!rect?.height || !rect?.width) return this._currentSpeed(attributes);
+      const isInline = speedControl.closest(".airflow-control-inline") !== null;
+      const raw = isInline
+        ? ((event.clientX - rect.left) / rect.width) * 100
+        : 100 - (((event.clientY - rect.top) / rect.height) * 100);
       return this._clamp(Math.round(raw / 10) * 10, 0, 100);
     };
     let speedDragging = false;
@@ -2480,18 +2607,26 @@ class HaDysonCard extends HTMLElement {
           this._render();
           return;
         }
-        await this._commitDirection(preset.direction, this._currentWidth(attributes));
+        const directionPresetEntity = this._directionPresetEntity();
+        if (directionPresetEntity) {
+          await this._hass.callService("select", "select_option", {
+            entity_id: directionPresetEntity,
+            option: preset.name,
+          });
+        } else {
+          await this._commitDirection(
+            preset.direction,
+            this._currentWidth(attributes),
+            { preserveOscillation: true },
+          );
+        }
       });
     });
 
     this.shadowRoot?.querySelectorAll("[data-preset-remove]")?.forEach((button) => {
-      button.addEventListener("click", async (event) => {
+      button.addEventListener("click", (event) => {
         event.stopPropagation();
-        if (this._pendingPresetDeleteId === button.dataset.presetRemove) {
-          await this._removeDirectionPreset(button.dataset.presetRemove);
-        } else {
-          this._pendingPresetDeleteId = button.dataset.presetRemove;
-        }
+        this._pendingPresetDeleteId = button.dataset.presetRemove;
         this._render();
       });
     });
@@ -2570,6 +2705,11 @@ class HaDysonCard extends HTMLElement {
 
   _render() {
     if (!this.shadowRoot) return;
+    if (this._draggingDial) {
+      this._renderPendingAfterDrag = true;
+      return;
+    }
+    this._renderPendingAfterDrag = false;
 
     const entityId = this._config.entity;
     const fan = entityId ? this._hass?.states?.[entityId] : null;
@@ -2592,6 +2732,7 @@ class HaDysonCard extends HTMLElement {
 
     const title = String(this._config.title || "").trim();
     const attributes = fan.attributes || {};
+    const fanAvailable = !["unknown", "unavailable"].includes(String(fan.state || "").toLowerCase());
     const powerState = fan.state === "on" ? "On" : "Off";
     const mode = attributes.preset_mode || attributes.mode || "Unknown";
     const climateAttributes = this._climateAttributes();
@@ -2611,13 +2752,16 @@ class HaDysonCard extends HTMLElement {
     const timerLabel = this._timerLabel(attributes);
     const activeTimer = Number(attributes.sleep_timer || 0);
     const autoActive = this._isAutoMode(mode, attributes);
-    const autoAvailable = this._supportsAutoMode(attributes);
+    const autoAvailable = fanAvailable && this._supportsAutoMode(attributes);
     const nightActive = this._nightModeOn(attributes);
     const airflowDirection = this._fanDirection(attributes);
-    const airflowDirectionAvailable = this._supportsFanDirection(attributes);
-    const speedAvailable = this._supportsFanSpeed(attributes);
-    const airflowControlSide = String(this._config.airflow_control_side || "right").toLowerCase() === "left" ? "left" : "right";
-    const speedOnLeft = airflowControlSide === "left";
+    const airflowDirectionAvailable = fanAvailable && this._supportsFanDirection(attributes);
+    const speedAvailable = fanAvailable && this._supportsFanSpeed(attributes);
+    const configuredAirflowPosition = String(this._config.airflow_control_side || "inline").toLowerCase();
+    const airflowControlPosition = ["left", "right"].includes(configuredAirflowPosition)
+      ? configuredAirflowPosition
+      : "inline";
+    const speedOnLeft = airflowControlPosition === "left";
     const direction = this._currentDirection(attributes);
     const width = this._currentWidth(attributes);
     const sensorDetailGroups = this._sensorDetailGroups();
@@ -2625,7 +2769,7 @@ class HaDysonCard extends HTMLElement {
     const visualCenter = this._visualAngleFromDevice(bounds.center);
     const handle = this._pointForAngle(160, 160, 128, visualCenter);
     const presetWidths = [0, 45, 90, 180, 350];
-    const controlReady = Boolean(this._deviceId());
+    const controlReady = fanAvailable && Boolean(this._deviceId());
     const operationActive = this._busy || this._pendingActive();
     const operationLabel = this._busy
       ? this._pendingLabel || this._t("applying")
@@ -2635,11 +2779,11 @@ class HaDysonCard extends HTMLElement {
     const hideUnsupported = Boolean(this._config.hide_unsupported);
     const hideEmptySensors = Boolean(this._config.hide_empty_sensors);
     const sensorDetailLayout = this._sensorDetailLayout();
-    const nightAvailable = Boolean(this._nightModeEntity());
-    const sleepTimerAvailable = Boolean(this._sleepTimerEntity()) || Number.isFinite(Number(attributes.sleep_timer));
-    const heatAvailable = this._climateEntity() && this._hasHeatMode(heatModes, "heat");
-    const fanOnlyAvailable = this._climateEntity() && this._hasHeatMode(heatModes, "fan_only");
-    const targetTempAvailable = this._climateEntity() && targetTemperature !== null;
+    const nightAvailable = fanAvailable && Boolean(this._nightModeEntity());
+    const sleepTimerAvailable = fanAvailable && (Boolean(this._sleepTimerEntity()) || Number.isFinite(Number(attributes.sleep_timer)));
+    const heatAvailable = fanAvailable && this._climateEntity() && this._hasHeatMode(heatModes, "heat");
+    const fanOnlyAvailable = fanAvailable && this._climateEntity() && this._hasHeatMode(heatModes, "fan_only");
+    const targetTempAvailable = fanAvailable && this._climateEntity() && targetTemperature !== null;
     const showSaveControl = !hideUnsupported || controlReady;
     const showAutoControl = !hideUnsupported || autoAvailable;
     const showNightControl = !hideUnsupported || nightAvailable;
@@ -2673,10 +2817,11 @@ class HaDysonCard extends HTMLElement {
     const lowerLimitOuter = this._pointForAngle(160, 160, 132, 5);
     const upperLimitInner = this._pointForAngle(160, 160, 54, 355);
     const upperLimitOuter = this._pointForAngle(160, 160, 132, 355);
+    const centerLineStart = this._pointForAngle(160, 160, 82, visualCenter);
+    const centerLineEnd = this._pointForAngle(160, 160, 115, visualCenter);
     const conePath = bounds.width
       ? this._sectorPath(160, 160, 128, this._visualAngleFromDevice(bounds.lower), this._visualAngleFromDevice(bounds.upper))
       : "";
-    const directPath = this._arcPath(160, 160, 116, visualCenter - 1, visualCenter + 1);
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -2904,19 +3049,22 @@ class HaDysonCard extends HTMLElement {
           justify-items: center;
         }
         .wheel-wrap {
-          --dyson-speed-gutter: 52px;
-          --dyson-wheel-size: min(calc(100% - var(--dyson-speed-gutter)), 304px);
+          --dyson-speed-gutter: 42px;
+          --dyson-wheel-size: min(calc(100% - var(--dyson-speed-gutter) - var(--dyson-speed-gutter)), 304px);
           --dyson-wheel-offset: -8px;
           position: relative;
           width: 100%;
           height: auto;
+        }
+        .wheel-wrap.airflow-control-inline {
+          --dyson-speed-gutter: 0px;
         }
         .wheel-stage {
           position: relative;
           width: var(--dyson-wheel-size);
           height: auto;
           aspect-ratio: 1 / 1;
-          margin: ${speedOnLeft ? "var(--dyson-wheel-offset) 0 0 var(--dyson-speed-gutter)" : "var(--dyson-wheel-offset) var(--dyson-speed-gutter) 0 0"};
+          margin: var(--dyson-wheel-offset) auto 0;
         }
         .wheel-button {
           appearance: none;
@@ -2950,21 +3098,36 @@ class HaDysonCard extends HTMLElement {
           stroke-linecap: round;
           pointer-events: none;
         }
+        .wheel-direction-center {
+          stroke: color-mix(in srgb, var(--primary-color, #4f46e5) 82%, white 12%);
+          stroke-width: 4;
+          stroke-linecap: round;
+          pointer-events: none;
+          filter: drop-shadow(0 0 3px color-mix(in srgb, var(--primary-color, #4f46e5) 38%, transparent));
+        }
+        .wheel-direction-line-overlay,
+        .wheel-direction-handle-overlay {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          overflow: visible;
+        }
+        .wheel-direction-line-overlay {
+          z-index: 2;
+        }
+        .wheel-direction-handle-overlay {
+          z-index: 4;
+        }
         .wheel-cone {
           fill: var(--dyson-cone-bg);
-          pointer-events: none;
-        }
-        .wheel-direct {
-          fill: none;
-          stroke: color-mix(in srgb, var(--primary-color, #4f46e5) 72%, white 8%);
-          stroke-width: 8;
-          stroke-linecap: round;
           pointer-events: none;
         }
         .wheel-preset-marker {
           position: absolute;
           transform: translate(-50%, -50%);
-          z-index: 2;
+          z-index: 5;
           display: grid;
           place-items: center;
           border-radius: 999px;
@@ -2991,8 +3154,8 @@ class HaDysonCard extends HTMLElement {
           position: absolute;
           left: ${((handle.x / 320) * 100).toFixed(4)}%;
           top: ${((handle.y / 320) * 100).toFixed(4)}%;
-          width: 52px;
-          height: 52px;
+          width: 72px;
+          height: 72px;
           transform: translate(-50%, -50%);
           border: 0;
           border-radius: 999px;
@@ -3138,11 +3301,64 @@ class HaDysonCard extends HTMLElement {
           box-shadow: var(--dyson-inner-highlight);
         }
         .speed-power-button.active {
-          border-color: color-mix(in srgb, var(--primary-color, #4f46e5) 34%, transparent);
-          background: var(--dyson-active-bg);
+          border-color: color-mix(in srgb, var(--primary-color, #03a9f4) 72%, #00bcd4 28%);
+          background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--primary-color, #03a9f4) 86%, #00bcd4 14%),
+            color-mix(in srgb, var(--primary-color, #03a9f4) 72%, #00bcd4 28%)
+          );
+          color: white;
+          box-shadow:
+            inset 0 1px 0 color-mix(in srgb, white 28%, transparent),
+            0 3px 10px color-mix(in srgb, var(--primary-color, #03a9f4) 28%, transparent);
         }
         .speed-power-button ha-icon {
           --mdc-icon-size: 18px;
+        }
+        .speed-power-button.active ha-icon {
+          color: #000;
+        }
+        .wheel-wrap.airflow-control-inline .wheel-speed {
+          position: relative;
+          inset: auto;
+          width: min(100%, 304px);
+          height: 42px;
+          margin: 8px auto 0;
+          grid-template-columns: minmax(0, 1fr) 38px 42px;
+          grid-template-rows: 42px;
+          align-items: center;
+          gap: 8px;
+        }
+        .wheel-wrap.airflow-control-inline .speed-control {
+          width: 100%;
+          height: 42px;
+        }
+        .wheel-wrap.airflow-control-inline .speed-rail {
+          inset: 5px 0;
+          background:
+            linear-gradient(
+              to right,
+              color-mix(in srgb, var(--primary-color, #03a9f4) 86%, #00bcd4 14%) 0 var(--speed-fill),
+              color-mix(in srgb, var(--primary-text-color) 8%, transparent) var(--speed-fill) 100%
+            );
+        }
+        .wheel-wrap.airflow-control-inline .speed-rail::after {
+          left: var(--speed-fill);
+          bottom: 50%;
+          width: 3px;
+          height: 18px;
+          transform: translate(-50%, 50%);
+        }
+        .wheel-wrap.airflow-control-inline .speed-slider {
+          width: 100%;
+          height: 42px;
+          writing-mode: horizontal-tb;
+          direction: ltr;
+        }
+        .wheel-wrap.airflow-control-inline .speed-slider::-webkit-slider-runnable-track,
+        .wheel-wrap.airflow-control-inline .speed-slider::-moz-range-track {
+          width: 100%;
+          height: 42px;
         }
         .timer-flyout {
           position: relative;
@@ -3449,7 +3665,7 @@ class HaDysonCard extends HTMLElement {
           width: 100%;
           height: 100%;
           border-radius: 999px;
-          background: color-mix(in srgb, var(--dyson-raised-bg) 72%, transparent);
+          background: color-mix(in srgb, var(--dyson-raised-bg) 84%, transparent);
           border: 1px solid color-mix(in srgb, var(--primary-text-color) 7%, transparent);
           box-shadow:
             inset 0 1px 0 color-mix(in srgb, white 16%, transparent),
@@ -3550,6 +3766,30 @@ class HaDysonCard extends HTMLElement {
           color: var(--primary-color, #03a9f4);
           box-shadow: none;
           text-shadow: 0 0 10px color-mix(in srgb, var(--primary-color, #03a9f4) 24%, transparent);
+        }
+        .wheel-direction-value {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 2;
+          min-width: 54px;
+          height: 54px;
+          padding: 0 9px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid color-mix(in srgb, var(--primary-color, #03a9f4) 30%, var(--dyson-border));
+          border-radius: 999px;
+          background: color-mix(in srgb, var(--dyson-raised-bg) 76%, transparent);
+          color: var(--primary-text-color);
+          box-shadow:
+            inset 0 1px 0 color-mix(in srgb, white 18%, transparent),
+            0 4px 12px color-mix(in srgb, #000 12%, transparent);
+          font-size: 1rem;
+          font-weight: 900;
+          letter-spacing: -0.02em;
+          pointer-events: none;
         }
         .operation-status {
           min-height: 8px;
@@ -3769,16 +4009,17 @@ class HaDysonCard extends HTMLElement {
           text-overflow: ellipsis;
           white-space: nowrap;
         }
+        .direction-preset-button small {
+          color: var(--secondary-text-color);
+          font-size: 0.66rem;
+          font-weight: 800;
+        }
         .direction-preset-remove {
           width: 30px;
           height: 38px;
           color: var(--secondary-text-color);
           border-left: 1px solid var(--dyson-border);
           font-size: 1rem;
-        }
-        .direction-preset-item.confirm-delete .direction-preset-remove {
-          color: #ef4444;
-          border-left-color: color-mix(in srgb, #ef4444 54%, transparent);
         }
         .direction-preset-add {
           flex: 0 0 auto;
@@ -3913,6 +4154,37 @@ class HaDysonCard extends HTMLElement {
           opacity: 0.68;
           pointer-events: none;
         }
+        .card.unavailable {
+          filter: grayscale(0.92);
+          opacity: 0.58;
+        }
+        .card.unavailable button,
+        .card.unavailable input,
+        .card.unavailable select {
+          pointer-events: none;
+        }
+        .unavailable-banner {
+          display: flex;
+          align-items: flex-start;
+          gap: 9px;
+          margin-bottom: 10px;
+          padding: 9px 11px;
+          border: 1px solid color-mix(in srgb, var(--secondary-text-color) 36%, transparent);
+          border-radius: 12px;
+          background: color-mix(in srgb, var(--secondary-text-color) 9%, var(--card-background-color));
+          color: var(--secondary-text-color);
+          font-size: 0.72rem;
+          line-height: 1.35;
+        }
+        .unavailable-banner ha-icon {
+          --mdc-icon-size: 20px;
+          flex: 0 0 auto;
+        }
+        .unavailable-banner strong {
+          display: block;
+          color: var(--primary-text-color);
+          font-size: 0.78rem;
+        }
         @container (max-width: 520px) {
           .direction-chip {
             padding-inline: 6px;
@@ -3955,12 +4227,21 @@ class HaDysonCard extends HTMLElement {
         }
       </style>
       <ha-card>
-        <div class="card ${this._busy ? "busy" : ""}">
+        <div class="card ${this._busy ? "busy" : ""} ${fanAvailable ? "" : "unavailable"}">
           ${title ? `
             <div class="header">
               <div class="title">${this._escapeHtml(title)}</div>
             </div>
           ` : ""}
+          ${fanAvailable ? "" : `
+            <div class="unavailable-banner" role="status">
+              <ha-icon icon="mdi:lan-disconnect"></ha-icon>
+              <div>
+                <strong>${this._t("device_unavailable")}</strong>
+                <span>${this._t("device_unavailable_help")}</span>
+              </div>
+            </div>
+          `}
 
           <div class="control-panel">
             ${showControlGrid ? `
@@ -3997,7 +4278,7 @@ class HaDysonCard extends HTMLElement {
                     <div class="timer-inline-buttons">
                       ${this._renderTimerButton(60, "1h", activeTimer)}
                       ${this._renderTimerButton(120, "2h", activeTimer)}
-                      ${this._renderTimerButton(240, "4h", activeTimer)}
+                      ${this._renderTimerButton(180, "3h", activeTimer)}
                       <button class="timer-chip timer-plus ${this._customTimerOpen ? "active" : ""}" data-timer-custom aria-label="${this._t("custom_sleep_timer")}">
                         <ha-icon icon="mdi:plus"></ha-icon>
                       </button>
@@ -4038,7 +4319,7 @@ class HaDysonCard extends HTMLElement {
                 ${sensorDetailLayout === "panel" ? this._renderSensorDetails(!showSensorMoreButton) : ""}
               </div>
             ` : ""}
-            <div class="wheel-wrap">
+            <div class="wheel-wrap airflow-control-${airflowControlPosition}">
               <div class="wheel-stage">
                 <button class="wheel-button" aria-label="${this._t("set_dyson_direction")}">
                   <svg class="wheel" viewBox="0 0 320 320" role="img" aria-hidden="true">
@@ -4047,20 +4328,25 @@ class HaDysonCard extends HTMLElement {
                     <line class="wheel-limit" x1="${lowerLimitInner.x}" y1="${lowerLimitInner.y}" x2="${lowerLimitOuter.x}" y2="${lowerLimitOuter.y}"></line>
                     <line class="wheel-limit" x1="${upperLimitInner.x}" y1="${upperLimitInner.y}" x2="${upperLimitOuter.x}" y2="${upperLimitOuter.y}"></line>
                     <path class="wheel-cone" d="${conePath}" style="${bounds.width ? "" : "display:none;"}"></path>
-                    <path class="wheel-direct" d="${directPath}" style="${bounds.width ? "display:none;" : ""}"></path>
                     <circle class="wheel-core" cx="160" cy="160" r="48"></circle>
                     <circle class="wheel-core-inner" cx="160" cy="160" r="36"></circle>
                     ${operationActive ? `<circle class="wheel-spinner" cx="160" cy="160" r="42"></circle>` : ""}
-                    <circle class="wheel-handle" cx="${handle.x}" cy="${handle.y}" r="13"></circle>
                   </svg>
                 </button>
+                <svg class="wheel-direction-line-overlay" viewBox="0 0 320 320" aria-hidden="true">
+                  <line class="wheel-direction-center" x1="${centerLineStart.x}" y1="${centerLineStart.y}" x2="${centerLineEnd.x}" y2="${centerLineEnd.y}" style="${bounds.width === 0 ? "" : "display:none;"}"></line>
+                </svg>
                 ${this._renderDirectionPresetMarkers()}
                 <button class="wheel-handle-hit" aria-label="${this._t("drag_set_direction")}"></button>
                 <div class="wheel-center-info">
                   <div class="sweep-dial sweep-dial-active-${bounds.width}" aria-label="${this._escapeHtml(this._t("sweep_presets"))}">
                     ${(hideUnsupported && !controlReady) ? "" : presetWidths.map((preset) => this._renderSweepButton(preset, bounds.width, !controlReady)).join("")}
+                    <span class="wheel-direction-value" aria-label="${this._escapeHtml(`${bounds.center}\u00b0 ${this._t("direction")}`)}">${bounds.center}\u00b0</span>
                   </div>
                 </div>
+                <svg class="wheel-direction-handle-overlay" viewBox="0 0 320 320" aria-hidden="true">
+                  <circle class="wheel-handle" cx="${handle.x}" cy="${handle.y}" r="13"></circle>
+                </svg>
               </div>
               <div class="wheel-speed">
                 <div class="speed-control" style="--speed-fill: ${speedPercent}%;">
@@ -4068,7 +4354,7 @@ class HaDysonCard extends HTMLElement {
                   <input class="speed-slider" type="range" min="0" max="100" step="10" value="${speedPercent}" aria-label="${this._t("set_airflow_speed")}" ${speedAvailable ? "" : "disabled"} />
                 </div>
                 <span class="speed-value" aria-hidden="true">${speedPercent}%</span>
-                <button class="speed-power-button power-button ${powerState === "On" ? "active" : ""}" aria-label="${powerState === "On" ? this._t("turn_dyson_off") : this._t("turn_dyson_on")}">
+                <button class="speed-power-button power-button ${powerState === "On" ? "active" : ""}" aria-label="${powerState === "On" ? this._t("turn_dyson_off") : this._t("turn_dyson_on")}" ${fanAvailable ? "" : "disabled"}>
                   <ha-icon icon="mdi:power"></ha-icon>
                 </button>
               </div>
@@ -4107,12 +4393,14 @@ class HaDysonCard extends HTMLElement {
 
           ${showDirectionPresets ? this._renderDirectionPresets(direction, width, controlReady) : ""}
 
-          ${controlReady ? "" : `<div class="helper">${this._escapeHtml(this._t("resolving_device"))}</div>`}
+          ${controlReady || !fanAvailable ? "" : `<div class="helper">${this._escapeHtml(this._t("resolving_device"))}</div>`}
         </div>
       </ha-card>
     `;
 
-    this._bindControls(attributes, powerState);
+    if (fanAvailable) {
+      this._bindControls(attributes, powerState);
+    }
   }
 }
 

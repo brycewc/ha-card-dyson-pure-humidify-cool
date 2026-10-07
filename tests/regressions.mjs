@@ -46,6 +46,58 @@ assert.equal(typeof Card, "function", "card custom element should be registered"
 
 const card = new Card();
 card._config = { entity: "fan.purificateur_dyson" };
+card.setConfig({ entity: "fan.purificateur_dyson" });
+assert.equal(card._config.airflow_control_side, "inline");
+assert.equal(card._config.sensor_detail_layout, "inline");
+card.setConfig({ entity: "fan.purificateur_dyson", airflow_control_side: "left" });
+assert.equal(card._config.airflow_control_side, "left");
+
+const presetCommitCard = new Card();
+const presetCalls = [];
+presetCommitCard._config = { entity: "fan.purificateur_dyson" };
+presetCommitCard._derived = {
+  deviceId: "dyson-device-1",
+  oscillationCenterEntity: "number.purificateur_dyson_angle_centre",
+};
+presetCommitCard._hass = {
+  states: {
+    "fan.purificateur_dyson": {
+      state: "on",
+      attributes: { oscillating: false },
+    },
+  },
+  async callService(domain, service, data) {
+    presetCalls.push({ domain, service, data });
+  },
+};
+presetCommitCard._render = () => {};
+presetCommitCard._currentDirection = () => 100;
+presetCommitCard._currentWidth = () => 45;
+presetCommitCard._setPendingDirection = () => {};
+presetCommitCard._settleDirectionCommand = () => {};
+await presetCommitCard._commitDirection(200, 45, { preserveOscillation: true });
+assert.deepEqual(
+  JSON.parse(JSON.stringify(presetCalls)),
+  [
+    {
+      domain: "number",
+      service: "set_value",
+      data: {
+        entity_id: "number.purificateur_dyson_angle_centre",
+        value: 200,
+      },
+    },
+    {
+      domain: "fan",
+      service: "oscillate",
+      data: {
+        entity_id: "fan.purificateur_dyson",
+        oscillating: false,
+      },
+    },
+  ],
+  "applying a named direction should restore the previous oscillation state",
+);
 
 const registryData = {
   devices: [{ id: "dyson-device-1", name: "Purificateur Dyson" }],
@@ -91,6 +143,64 @@ assert.match(source, /wheel-sensor-strip sensor-layout-\$\{sensorDetailLayout\}/
 assert.match(source, /\.wheel-sensor-strip:not\(\.expanded\):not\(\.sensor-layout-inline\)/);
 assert.match(source, /justify-content:\s*safe center;/);
 assert.doesNotMatch(source, /\.wheel-sensor-strip:not\(\.expanded\)\s*\{/);
+assert.match(source, /--dyson-wheel-size:\s*min\(calc\(100% - var\(--dyson-speed-gutter\) - var\(--dyson-speed-gutter\)\), 304px\)/);
+assert.match(source, /--dyson-speed-gutter:\s*42px/);
+assert.match(source, /airflow_control_side:\s*"inline"/);
+assert.match(source, /value:\s*"inline"[\s\S]*?label:/);
+assert.match(source, /wheel-wrap airflow-control-\$\{airflowControlPosition\}/);
+assert.match(source, /\.wheel-wrap\.airflow-control-inline \.wheel-speed/);
+assert.match(source, /speedControl\.closest\("\.airflow-control-inline"\)/);
+assert.match(source, /\{ preserveOscillation = false \} = \{\}/);
+assert.match(source, /\{ preserveOscillation: true \}/);
+assert.match(source, /oscillating:\s*previousOscillation/);
+assert.match(source, /margin:\s*var\(--dyson-wheel-offset\) auto 0/);
+assert.match(source, /class="wheel-direction-center"/);
+assert.match(source, /class="wheel-direction-line-overlay"/);
+assert.match(source, /class="wheel-direction-handle-overlay"/);
+assert.match(source, /\.wheel-direction-line-overlay\s*\{[\s\S]*?z-index:\s*2;/);
+assert.match(source, /\.wheel-center-info\s*\{[\s\S]*?z-index:\s*3;/);
+assert.match(source, /\.wheel-direction-handle-overlay\s*\{[\s\S]*?z-index:\s*4;/);
+assert.equal((source.match(/class="wheel-handle"/g) || []).length, 1);
+assert.match(source, /\.wheel-preset-marker\s*\{[\s\S]*?z-index:\s*5;/);
+assert.match(source, /\.sweep-dial\s*\{[\s\S]*?background:\s*color-mix\(in srgb, var\(--dyson-raised-bg\) 84%, transparent\);/);
+assert.match(source, /const centerLineEnd = this\._pointForAngle\(160, 160, 115, visualCenter\)/);
+assert.match(source, /const centerLineStart = this\._pointForAngle\(160, 160, 82, visualCenter\)/);
+assert.match(source, /class="wheel-direction-center" x1="\$\{centerLineStart\.x\}" y1="\$\{centerLineStart\.y\}"/);
+assert.match(source, /centerLine\.setAttribute\("x1", String\(centerLineStart\.x\)\)/);
+assert.match(source, /centerLine\.setAttribute\("y1", String\(centerLineStart\.y\)\)/);
+assert.match(source, /centerLine\.setAttribute\("x2", String\(centerLineEnd\.x\)\)/);
+assert.match(source, /centerLine\.style\.display = "none"/);
+assert.match(source, /bounds\.width === 0 \? "" : "display:none;"/);
+assert.doesNotMatch(source, /wheel-zero-reference|wheel-zero-label|>0°</);
+assert.match(source, /if \(this\._draggingDial\) \{[\s\S]*?this\._renderPendingAfterDrag = true;[\s\S]*?return;/);
+assert.match(source, /handleTarget\.addEventListener\("pointerdown",[\s\S]*?event\.preventDefault\(\);[\s\S]*?event\.stopPropagation\(\);/);
+assert.match(source, /handleTarget\.addEventListener\("pointermove",[\s\S]*?event\.preventDefault\(\);[\s\S]*?event\.stopPropagation\(\);/);
+assert.match(source, /handleTarget\.addEventListener\("pointercancel",[\s\S]*?event\.preventDefault\(\);[\s\S]*?event\.stopPropagation\(\);/);
+assert.match(source, /handleTarget\.addEventListener\("lostpointercapture",[\s\S]*?this\._draggingDial = false;[\s\S]*?this\._render\(\);/);
+assert.match(source, /\.wheel-handle-hit\s*\{[\s\S]*?width:\s*72px;[\s\S]*?height:\s*72px;[\s\S]*?touch-action:\s*none;/);
+assert.match(source, /const fanAvailable = !\["unknown", "unavailable"\]/);
+assert.match(source, /class="unavailable-banner"/);
+assert.doesNotMatch(source, /data-preset-automation|direction-preset-automation|content-copy/);
+assert.match(source, /directionPresetEntity: this\._findEntityByRegistryKeys/);
+assert.match(source, /callService\("select", "select_option", \{[\s\S]*?entity_id: directionPresetEntity,[\s\S]*?option: preset\.name/);
+assert.match(source, /callService\("hass_dyson", "set_direction_presets"/);
+assert.match(source, /class="wheel-direction-value"/);
+assert.match(source, /directionValue\.textContent = `\$\{bounds\.center\}\\u00b0`/);
+assert.match(source, /\.wheel-preset-marker\s*\{[\s\S]*?color:\s*white;/);
+assert.match(source, /\.speed-power-button\.active ha-icon\s*\{[\s\S]*?color:\s*#000;/);
+assert.match(source, /\$\{confirmingDelete \? "" : `\s*<button class="direction-preset-remove"/);
+assert.doesNotMatch(source, /this\._pendingPresetDeleteId === button\.dataset\.presetRemove[\s\S]*?_removeDirectionPreset/);
+assert.match(source, /querySelectorAll\("\[data-preset-remove\]"\)[\s\S]*?this\._pendingPresetDeleteId = button\.dataset\.presetRemove;/);
+assert.match(source, /querySelector\("\.card"\)[\s\S]*?_clearPresetDeleteArm\(\)[\s\S]*?this\._render\(\);/);
+assert.match(source, /_renderTimerButton\(180, "3h", activeTimer\)/);
+assert.doesNotMatch(source, /_renderTimerButton\(240, "4h", activeTimer\)/);
+
+const dragRenderCard = new Card();
+dragRenderCard.shadowRoot = { innerHTML: "drag-preview" };
+dragRenderCard._draggingDial = true;
+dragRenderCard._render();
+assert.equal(dragRenderCard.shadowRoot.innerHTML, "drag-preview", "HA updates must not replace the active drag DOM");
+assert.equal(dragRenderCard._renderPendingAfterDrag, true, "a suppressed drag render should be replayed after release");
 
 const syncCard = new Card();
 syncCard._config = { entity: "fan.synced_dyson" };
