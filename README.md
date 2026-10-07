@@ -132,7 +132,7 @@ airflow_control_side: inline
 | `hide_unsupported` | boolean | `false` | Hides controls and info chips that are unavailable on the selected device instead of showing them as disabled/empty. |
 | `hide_empty_sensors` | boolean | `false` | Hides sensor badges with empty values (`unknown`, `unavailable`, or missing values). |
 | `sensor_more_button_threshold` | number | `4` | Shows the More/Less sensor toggle only when the visible sensor item count is greater than this value. |
-| `sensor_detail_layout` | `inline` or `panel` | `panel` | Forces where sensor details are rendered: inline in the top strip or in the details panel.
+| `sensor_detail_layout` | `inline` or `panel` | `inline` | Forces where sensor details are rendered: inline in the top strip or in the details panel.
 
 Example with both cleanup options enabled:
 

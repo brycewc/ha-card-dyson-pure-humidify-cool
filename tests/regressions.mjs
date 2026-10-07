@@ -48,6 +48,7 @@ const card = new Card();
 card._config = { entity: "fan.purificateur_dyson" };
 card.setConfig({ entity: "fan.purificateur_dyson" });
 assert.equal(card._config.airflow_control_side, "inline");
+assert.equal(card._config.sensor_detail_layout, "inline");
 card.setConfig({ entity: "fan.purificateur_dyson", airflow_control_side: "left" });
 assert.equal(card._config.airflow_control_side, "left");
 

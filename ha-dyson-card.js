@@ -6,7 +6,7 @@ class HaDysonCard extends HTMLElement {
       entity: "fan.my_dyson",
       airflow_control_side: "inline",
       language: "auto",
-      sensor_detail_layout: "panel",
+      sensor_detail_layout: "inline",
     };
   }
 
@@ -287,7 +287,7 @@ class HaDysonCard extends HTMLElement {
       hide_unsupported: hideUnsupported,
       hide_empty_sensors: hideEmptySensors,
       sensor_more_button_threshold: sensorMoreButtonThreshold,
-      sensor_detail_layout: "panel",
+      sensor_detail_layout: "inline",
       ...config,
     };
     this._config.hide_unsupported = hideUnsupported;
@@ -1297,7 +1297,7 @@ class HaDysonCard extends HTMLElement {
   }
 
   _sensorDetailLayout() {
-    const value = String(this._config?.sensor_detail_layout || "panel").trim().toLowerCase();
+    const value = String(this._config?.sensor_detail_layout || "inline").trim().toLowerCase();
     return value === "inline" ? "inline" : "panel";
   }
 
