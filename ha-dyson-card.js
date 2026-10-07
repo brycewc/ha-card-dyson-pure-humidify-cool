@@ -2828,6 +2828,17 @@ class HaDysonCard extends HTMLElement {
           display: grid;
           gap: 10px;
         }
+        .build-diagnostic {
+          justify-self: center;
+          padding: 5px 12px;
+          border-radius: 999px;
+          background: #ff2d55;
+          color: #fff;
+          font-size: 0.72rem;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          box-shadow: 0 3px 10px rgba(255, 45, 85, 0.35);
+        }
         .header {
           display: block;
         }
@@ -4118,6 +4129,7 @@ class HaDysonCard extends HTMLElement {
       </style>
       <ha-card>
         <div class="card ${this._busy ? "busy" : ""} ${fanAvailable ? "" : "unavailable"}">
+          <div class="build-diagnostic">DYSON TEST BUILD</div>
           ${title ? `
             <div class="header">
               <div class="title">${this._escapeHtml(title)}</div>
