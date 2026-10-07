@@ -179,6 +179,8 @@ assert.match(source, /oscillating:\s*previousOscillation/);
 assert.match(source, /margin:\s*var\(--dyson-wheel-offset\) auto 0/);
 assert.match(source, /class="wheel-direction-center"/);
 assert.match(source, /class="wheel-direction-overlay"/);
+assert.match(source, /class="wheel-direction-overlay"[\s\S]*class="wheel-direction-center"[\s\S]*class="wheel-handle"/);
+assert.equal((source.match(/class="wheel-handle"/g) || []).length, 1);
 assert.match(source, /const centerLineEnd = this\._pointForAngle\(160, 160, 115, visualCenter\)/);
 assert.match(source, /class="wheel-direction-center" x1="160" y1="160"/);
 assert.match(source, /centerLine\.setAttribute\("x2", String\(centerLineEnd\.x\)\)/);

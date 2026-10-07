@@ -4310,7 +4310,6 @@ class HaDysonCard extends HTMLElement {
                     <circle class="wheel-core" cx="160" cy="160" r="48"></circle>
                     <circle class="wheel-core-inner" cx="160" cy="160" r="36"></circle>
                     ${operationActive ? `<circle class="wheel-spinner" cx="160" cy="160" r="42"></circle>` : ""}
-                    <circle class="wheel-handle" cx="${handle.x}" cy="${handle.y}" r="13"></circle>
                   </svg>
                 </button>
                 ${this._renderDirectionPresetMarkers()}
@@ -4322,6 +4321,7 @@ class HaDysonCard extends HTMLElement {
                 </div>
                 <svg class="wheel-direction-overlay" viewBox="0 0 320 320" aria-hidden="true">
                   <line class="wheel-direction-center" x1="160" y1="160" x2="${centerLineEnd.x}" y2="${centerLineEnd.y}" style="${bounds.width === 0 ? "" : "display:none;"}"></line>
+                  <circle class="wheel-handle" cx="${handle.x}" cy="${handle.y}" r="13"></circle>
                 </svg>
               </div>
               <div class="wheel-speed">
