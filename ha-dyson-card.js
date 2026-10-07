@@ -3122,7 +3122,7 @@ class HaDysonCard extends HTMLElement {
         .wheel-preset-marker {
           position: absolute;
           transform: translate(-50%, -50%);
-          z-index: 2;
+          z-index: 5;
           display: grid;
           place-items: center;
           border-radius: 999px;
