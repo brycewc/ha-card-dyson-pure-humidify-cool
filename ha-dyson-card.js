@@ -1760,18 +1760,36 @@ class HaDysonCard extends HTMLElement {
     if (!preset || !entityId || !deviceId) return "";
     const angle = this._normalizeAngle(preset.direction);
     const name = String(preset.name || `${angle}\u00b0`).trim();
+    const centerEntity = String(this._oscillationCenterEntity() || "").trim();
+    if (centerEntity) {
+      return [
+        `# Aim Dyson at ${name} (${angle}\u00b0) without changing oscillation`,
+        "- variables:",
+        `    dyson_was_oscillating: '{{ state_attr(${JSON.stringify(entityId)}, "oscillating") | bool(false) }}'`,
+        "- action: number.set_value",
+        "  target:",
+        `    entity_id: ${JSON.stringify(centerEntity)}`,
+        "  data:",
+        `    value: ${angle}`,
+        "- action: fan.oscillate",
+        "  target:",
+        `    entity_id: ${JSON.stringify(entityId)}`,
+        "  data:",
+        "    oscillating: \"{{ dyson_was_oscillating }}\"",
+      ].join("\n");
+    }
+
+    const attributes = this._stateObj(entityId)?.attributes || {};
+    const currentBounds = this._currentBounds(attributes);
+    const currentWidth = this._widthFromBounds(currentBounds) ?? this._currentWidth(attributes);
+    const bounds = this._boundsFromCenterWidth(angle, currentWidth);
     return [
-      `# Aim Dyson at ${name} (${angle}\u00b0)`,
-      "- action: fan.oscillate",
-      "  target:",
-      `    entity_id: ${JSON.stringify(entityId)}`,
-      "  data:",
-      "    oscillating: false",
+      `# Aim Dyson at ${name} (${angle}\u00b0) without changing oscillation`,
       "- action: hass_dyson.set_oscillation_angles",
       "  data:",
       `    device_id: ${JSON.stringify(deviceId)}`,
-      `    lower_angle: ${angle}`,
-      `    upper_angle: ${angle}`,
+      `    lower_angle: ${bounds.lower}`,
+      `    upper_angle: ${bounds.upper}`,
     ].join("\n");
   }
 
@@ -2219,9 +2237,11 @@ class HaDysonCard extends HTMLElement {
     }
   }
 
-  async _commitDirection(direction, width) {
+  async _commitDirection(direction, width, { preserveOscillation = false } = {}) {
     const deviceId = this._deviceId();
     if (!this._hass || !deviceId || this._busy) return;
+    const attributes = this._stateObj(this._config.entity)?.attributes || {};
+    const previousOscillation = preserveOscillation ? this._oscillationEnabled(attributes) : null;
     const bounds = this._boundsFromCenterWidth(direction, width);
     const { lower, upper, center, width: normalizedWidth } = bounds;
     const directMode = normalizedWidth === 0;
@@ -2239,8 +2259,13 @@ class HaDysonCard extends HTMLElement {
     this._render();
 
     try {
-      if (directMode) {
-        if (fanOn) {
+      if (preserveOscillation && this._oscillationCenterEntity()) {
+        await this._hass.callService("number", "set_value", {
+          entity_id: this._oscillationCenterEntity(),
+          value: center,
+        });
+      } else if (directMode) {
+        if (fanOn && !preserveOscillation) {
           await this._hass.callService("fan", "oscillate", {
             entity_id: this._config.entity,
             oscillating: false,
@@ -2256,7 +2281,7 @@ class HaDysonCard extends HTMLElement {
           entity_id: this._oscillationCenterEntity(),
           value: center,
         });
-        if (fanOn) {
+        if (fanOn && !preserveOscillation) {
           await this._hass.callService("fan", "oscillate", {
             entity_id: this._config.entity,
             oscillating: true,
@@ -2268,12 +2293,18 @@ class HaDysonCard extends HTMLElement {
           lower_angle: lower,
           upper_angle: upper,
         });
-        if (fanOn) {
+        if (fanOn && !preserveOscillation) {
           await this._hass.callService("fan", "oscillate", {
             entity_id: this._config.entity,
             oscillating: true,
           });
         }
+      }
+      if (preserveOscillation && typeof previousOscillation === "boolean") {
+        await this._hass.callService("fan", "oscillate", {
+          entity_id: this._config.entity,
+          oscillating: previousOscillation,
+        });
       }
       this._settleDirectionCommand(center, normalizedWidth, false);
     } catch (error) {
@@ -2578,7 +2609,11 @@ class HaDysonCard extends HTMLElement {
           this._render();
           return;
         }
-        await this._commitDirection(preset.direction, this._currentWidth(attributes));
+        await this._commitDirection(
+          preset.direction,
+          this._currentWidth(attributes),
+          { preserveOscillation: true },
+        );
       });
     });
 

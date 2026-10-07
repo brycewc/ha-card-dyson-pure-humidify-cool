@@ -51,23 +51,75 @@ assert.equal(card._config.airflow_control_side, "inline");
 card.setConfig({ entity: "fan.purificateur_dyson", airflow_control_side: "left" });
 assert.equal(card._config.airflow_control_side, "left");
 
-card._derived = { deviceId: "dyson-device-1" };
+card._derived = {
+  deviceId: "dyson-device-1",
+  oscillationCenterEntity: "number.purificateur_dyson_angle_centre",
+};
 assert.equal(
   card._directionPresetAutomationYaml({ name: "Bed", direction: 42 }),
   [
-    "# Aim Dyson at Bed (40°)",
+    "# Aim Dyson at Bed (40°) without changing oscillation",
+    "- variables:",
+    '    dyson_was_oscillating: \'{{ state_attr("fan.purificateur_dyson", "oscillating") | bool(false) }}\'',
+    "- action: number.set_value",
+    "  target:",
+    '    entity_id: "number.purificateur_dyson_angle_centre"',
+    "  data:",
+    "    value: 40",
     "- action: fan.oscillate",
     "  target:",
     '    entity_id: "fan.purificateur_dyson"',
     "  data:",
-    "    oscillating: false",
-    "- action: hass_dyson.set_oscillation_angles",
-    "  data:",
-    '    device_id: "dyson-device-1"',
-    "    lower_angle: 40",
-    "    upper_angle: 40",
+    '    oscillating: "{{ dyson_was_oscillating }}"',
   ].join("\n"),
-  "preset automation YAML should expose a stable direct-angle action sequence",
+  "preset automation YAML should change only the center angle",
+);
+
+const presetCommitCard = new Card();
+const presetCalls = [];
+presetCommitCard._config = { entity: "fan.purificateur_dyson" };
+presetCommitCard._derived = {
+  deviceId: "dyson-device-1",
+  oscillationCenterEntity: "number.purificateur_dyson_angle_centre",
+};
+presetCommitCard._hass = {
+  states: {
+    "fan.purificateur_dyson": {
+      state: "on",
+      attributes: { oscillating: false },
+    },
+  },
+  async callService(domain, service, data) {
+    presetCalls.push({ domain, service, data });
+  },
+};
+presetCommitCard._render = () => {};
+presetCommitCard._currentDirection = () => 100;
+presetCommitCard._currentWidth = () => 45;
+presetCommitCard._setPendingDirection = () => {};
+presetCommitCard._settleDirectionCommand = () => {};
+await presetCommitCard._commitDirection(200, 45, { preserveOscillation: true });
+assert.deepEqual(
+  JSON.parse(JSON.stringify(presetCalls)),
+  [
+    {
+      domain: "number",
+      service: "set_value",
+      data: {
+        entity_id: "number.purificateur_dyson_angle_centre",
+        value: 200,
+      },
+    },
+    {
+      domain: "fan",
+      service: "oscillate",
+      data: {
+        entity_id: "fan.purificateur_dyson",
+        oscillating: false,
+      },
+    },
+  ],
+  "applying a named direction should restore the previous oscillation state",
 );
 
 const registryData = {
@@ -121,6 +173,9 @@ assert.match(source, /value:\s*"inline"[\s\S]*?label:/);
 assert.match(source, /wheel-wrap airflow-control-\$\{airflowControlPosition\}/);
 assert.match(source, /\.wheel-wrap\.airflow-control-inline \.wheel-speed/);
 assert.match(source, /speedControl\.closest\("\.airflow-control-inline"\)/);
+assert.match(source, /\{ preserveOscillation = false \} = \{\}/);
+assert.match(source, /\{ preserveOscillation: true \}/);
+assert.match(source, /oscillating:\s*previousOscillation/);
 assert.match(source, /margin:\s*var\(--dyson-wheel-offset\) auto 0/);
 assert.match(source, /class="wheel-direction-center"/);
 assert.match(source, /class="wheel-direction-overlay"/);
