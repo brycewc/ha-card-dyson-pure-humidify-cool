@@ -3675,7 +3675,7 @@ class HaDysonCard extends HTMLElement {
           width: 100%;
           height: 100%;
           border-radius: 999px;
-          background: color-mix(in srgb, var(--dyson-raised-bg) 72%, transparent);
+          background: var(--dyson-raised-bg);
           border: 1px solid color-mix(in srgb, var(--primary-text-color) 7%, transparent);
           box-shadow:
             inset 0 1px 0 color-mix(in srgb, white 16%, transparent),
