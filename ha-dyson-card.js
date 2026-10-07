@@ -969,6 +969,7 @@ class HaDysonCard extends HTMLElement {
     const bounds = this._boundsFromCenterWidth(direction, width);
     const visualCenter = this._visualAngleFromDevice(bounds.center);
     const handle = this._pointForAngle(160, 160, 128, visualCenter);
+    const centerLineStart = this._pointForAngle(160, 160, 82, visualCenter);
     const centerLineEnd = this._pointForAngle(160, 160, 115, visualCenter);
     const cone = wheel.querySelector(".wheel-cone");
     const centerLine = wheel.querySelector(".wheel-direction-center");
@@ -983,6 +984,8 @@ class HaDysonCard extends HTMLElement {
       handleHit.style.top = `${((handle.y / 320) * 100).toFixed(4)}%`;
     }
     if (centerLine) {
+      centerLine.setAttribute("x1", String(centerLineStart.x));
+      centerLine.setAttribute("y1", String(centerLineStart.y));
       centerLine.setAttribute("x2", String(centerLineEnd.x));
       centerLine.setAttribute("y2", String(centerLineEnd.y));
     }
@@ -2839,6 +2842,7 @@ class HaDysonCard extends HTMLElement {
     const lowerLimitOuter = this._pointForAngle(160, 160, 132, 5);
     const upperLimitInner = this._pointForAngle(160, 160, 54, 355);
     const upperLimitOuter = this._pointForAngle(160, 160, 132, 355);
+    const centerLineStart = this._pointForAngle(160, 160, 82, visualCenter);
     const centerLineEnd = this._pointForAngle(160, 160, 115, visualCenter);
     const conePath = bounds.width
       ? this._sectorPath(160, 160, 128, this._visualAngleFromDevice(bounds.lower), this._visualAngleFromDevice(bounds.upper))
@@ -3675,7 +3679,7 @@ class HaDysonCard extends HTMLElement {
           width: 100%;
           height: 100%;
           border-radius: 999px;
-          background: var(--dyson-raised-bg);
+          background: color-mix(in srgb, var(--dyson-raised-bg) 84%, transparent);
           border: 1px solid color-mix(in srgb, var(--primary-text-color) 7%, transparent);
           box-shadow:
             inset 0 1px 0 color-mix(in srgb, white 16%, transparent),
@@ -4335,7 +4339,7 @@ class HaDysonCard extends HTMLElement {
                   </svg>
                 </button>
                 <svg class="wheel-direction-line-overlay" viewBox="0 0 320 320" aria-hidden="true">
-                  <line class="wheel-direction-center" x1="160" y1="160" x2="${centerLineEnd.x}" y2="${centerLineEnd.y}" style="${bounds.width === 0 ? "" : "display:none;"}"></line>
+                  <line class="wheel-direction-center" x1="${centerLineStart.x}" y1="${centerLineStart.y}" x2="${centerLineEnd.x}" y2="${centerLineEnd.y}" style="${bounds.width === 0 ? "" : "display:none;"}"></line>
                 </svg>
                 ${this._renderDirectionPresetMarkers()}
                 <button class="wheel-handle-hit" aria-label="${this._t("drag_set_direction")}"></button>
