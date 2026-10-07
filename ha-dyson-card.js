@@ -2766,13 +2766,11 @@ class HaDysonCard extends HTMLElement {
     const lowerLimitOuter = this._pointForAngle(160, 160, 132, 5);
     const upperLimitInner = this._pointForAngle(160, 160, 54, 355);
     const upperLimitOuter = this._pointForAngle(160, 160, 132, 355);
-    const zeroReferenceInner = this._pointForAngle(160, 160, 52, this._visualAngleFromDevice(0));
-    const zeroReferenceOuter = this._pointForAngle(160, 160, 116, this._visualAngleFromDevice(0));
-    const zeroReferenceLabel = this._pointForAngle(160, 160, 144, this._visualAngleFromDevice(0));
+    const centerLineInner = this._pointForAngle(160, 160, 52, visualCenter);
+    const centerLineOuter = this._pointForAngle(160, 160, 116, visualCenter);
     const conePath = bounds.width
       ? this._sectorPath(160, 160, 128, this._visualAngleFromDevice(bounds.lower), this._visualAngleFromDevice(bounds.upper))
       : "";
-    const directPath = this._arcPath(160, 160, 116, visualCenter - 1, visualCenter + 1);
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -2827,17 +2825,6 @@ class HaDysonCard extends HTMLElement {
         .card {
           display: grid;
           gap: 10px;
-        }
-        .build-diagnostic {
-          justify-self: center;
-          padding: 5px 12px;
-          border-radius: 999px;
-          background: #ff2d55;
-          color: #fff;
-          font-size: 0.72rem;
-          font-weight: 900;
-          letter-spacing: 0.08em;
-          box-shadow: 0 3px 10px rgba(255, 45, 85, 0.35);
         }
         .header {
           display: block;
@@ -3057,30 +3044,15 @@ class HaDysonCard extends HTMLElement {
           stroke-linecap: round;
           pointer-events: none;
         }
-        .wheel-zero-reference {
+        .wheel-direction-center {
           stroke: color-mix(in srgb, var(--primary-color, #4f46e5) 82%, white 12%);
           stroke-width: 4;
           stroke-linecap: round;
           pointer-events: none;
           filter: drop-shadow(0 0 3px color-mix(in srgb, var(--primary-color, #4f46e5) 38%, transparent));
         }
-        .wheel-zero-label {
-          fill: var(--primary-text-color);
-          font-size: 13px;
-          font-weight: 850;
-          text-anchor: middle;
-          dominant-baseline: middle;
-          pointer-events: none;
-        }
         .wheel-cone {
           fill: var(--dyson-cone-bg);
-          pointer-events: none;
-        }
-        .wheel-direct {
-          fill: none;
-          stroke: color-mix(in srgb, var(--primary-color, #4f46e5) 72%, white 8%);
-          stroke-width: 8;
-          stroke-linecap: round;
           pointer-events: none;
         }
         .wheel-preset-marker {
@@ -4129,7 +4101,6 @@ class HaDysonCard extends HTMLElement {
       </style>
       <ha-card>
         <div class="card ${this._busy ? "busy" : ""} ${fanAvailable ? "" : "unavailable"}">
-          <div class="build-diagnostic">DYSON TEST BUILD</div>
           ${title ? `
             <div class="header">
               <div class="title">${this._escapeHtml(title)}</div>
@@ -4229,10 +4200,8 @@ class HaDysonCard extends HTMLElement {
                     <path class="wheel-ring" d="${travelRingPath}"></path>
                     <line class="wheel-limit" x1="${lowerLimitInner.x}" y1="${lowerLimitInner.y}" x2="${lowerLimitOuter.x}" y2="${lowerLimitOuter.y}"></line>
                     <line class="wheel-limit" x1="${upperLimitInner.x}" y1="${upperLimitInner.y}" x2="${upperLimitOuter.x}" y2="${upperLimitOuter.y}"></line>
-                    <line class="wheel-zero-reference" x1="${zeroReferenceInner.x}" y1="${zeroReferenceInner.y}" x2="${zeroReferenceOuter.x}" y2="${zeroReferenceOuter.y}"></line>
-                    <text class="wheel-zero-label" x="${zeroReferenceLabel.x}" y="${zeroReferenceLabel.y}">0°</text>
                     <path class="wheel-cone" d="${conePath}" style="${bounds.width ? "" : "display:none;"}"></path>
-                    <path class="wheel-direct" d="${directPath}" style="${bounds.width ? "display:none;" : ""}"></path>
+                    <line class="wheel-direction-center" x1="${centerLineInner.x}" y1="${centerLineInner.y}" x2="${centerLineOuter.x}" y2="${centerLineOuter.y}"></line>
                     <circle class="wheel-core" cx="160" cy="160" r="48"></circle>
                     <circle class="wheel-core-inner" cx="160" cy="160" r="36"></circle>
                     ${operationActive ? `<circle class="wheel-spinner" cx="160" cy="160" r="42"></circle>` : ""}
