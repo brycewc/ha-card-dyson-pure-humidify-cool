@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-10-07
+
 ### Added
 
 - Native direction presets for Home Assistant automations when supported by the installed `hass_dyson` integration.
