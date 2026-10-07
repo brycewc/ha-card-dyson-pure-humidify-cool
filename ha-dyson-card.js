@@ -229,6 +229,7 @@ class HaDysonCard extends HTMLElement {
     this._draftDirection = null;
     this._draftWidth = null;
     this._draggingDial = false;
+    this._renderPendingAfterDrag = false;
     this._derived = null;
     this._pendingDirection = null;
     this._pendingWidth = null;
@@ -2360,6 +2361,7 @@ class HaDysonCard extends HTMLElement {
 
     handleTarget.addEventListener("pointerdown", (event) => {
       event.preventDefault();
+      event.stopPropagation();
       this._draggingDial = true;
       handleTarget.setPointerCapture?.(event.pointerId);
       updateDraft(event);
@@ -2368,20 +2370,35 @@ class HaDysonCard extends HTMLElement {
     handleTarget.addEventListener("pointermove", (event) => {
       if (!this._draggingDial) return;
       event.preventDefault();
+      event.stopPropagation();
       updateDraft(event);
     });
 
     const finish = async (event) => {
       if (!this._draggingDial) return;
       event.preventDefault();
-      this._draggingDial = false;
-      handleTarget.releasePointerCapture?.(event.pointerId);
+      event.stopPropagation();
       updateDraft(event);
+      this._draggingDial = false;
+      if (handleTarget.hasPointerCapture?.(event.pointerId)) {
+        handleTarget.releasePointerCapture(event.pointerId);
+      }
       await this._commitDirection(draftDirection, currentWidth);
+      if (this._renderPendingAfterDrag) this._render();
     };
 
     handleTarget.addEventListener("pointerup", finish);
-    handleTarget.addEventListener("pointercancel", () => {
+    handleTarget.addEventListener("pointercancel", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this._draggingDial = false;
+      this._draftDirection = null;
+      this._draftWidth = null;
+      this._render();
+    });
+    handleTarget.addEventListener("lostpointercapture", (event) => {
+      if (!this._draggingDial) return;
+      event.stopPropagation();
       this._draggingDial = false;
       this._draftDirection = null;
       this._draftWidth = null;
@@ -2712,6 +2729,11 @@ class HaDysonCard extends HTMLElement {
 
   _render() {
     if (!this.shadowRoot) return;
+    if (this._draggingDial) {
+      this._renderPendingAfterDrag = true;
+      return;
+    }
+    this._renderPendingAfterDrag = false;
 
     const entityId = this._config.entity;
     const fan = entityId ? this._hass?.states?.[entityId] : null;
@@ -3155,8 +3177,8 @@ class HaDysonCard extends HTMLElement {
           position: absolute;
           left: ${((handle.x / 320) * 100).toFixed(4)}%;
           top: ${((handle.y / 320) * 100).toFixed(4)}%;
-          width: 52px;
-          height: 52px;
+          width: 72px;
+          height: 72px;
           transform: translate(-50%, -50%);
           border: 0;
           border-radius: 999px;

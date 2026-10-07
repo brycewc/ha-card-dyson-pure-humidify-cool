@@ -192,11 +192,24 @@ assert.match(source, /centerLine\.setAttribute\("x2", String\(centerLineEnd\.x\)
 assert.match(source, /centerLine\.style\.display = "none"/);
 assert.match(source, /bounds\.width === 0 \? "" : "display:none;"/);
 assert.doesNotMatch(source, /wheel-zero-reference|wheel-zero-label|>0°</);
+assert.match(source, /if \(this\._draggingDial\) \{[\s\S]*?this\._renderPendingAfterDrag = true;[\s\S]*?return;/);
+assert.match(source, /handleTarget\.addEventListener\("pointerdown",[\s\S]*?event\.preventDefault\(\);[\s\S]*?event\.stopPropagation\(\);/);
+assert.match(source, /handleTarget\.addEventListener\("pointermove",[\s\S]*?event\.preventDefault\(\);[\s\S]*?event\.stopPropagation\(\);/);
+assert.match(source, /handleTarget\.addEventListener\("pointercancel",[\s\S]*?event\.preventDefault\(\);[\s\S]*?event\.stopPropagation\(\);/);
+assert.match(source, /handleTarget\.addEventListener\("lostpointercapture",[\s\S]*?this\._draggingDial = false;[\s\S]*?this\._render\(\);/);
+assert.match(source, /\.wheel-handle-hit\s*\{[\s\S]*?width:\s*72px;[\s\S]*?height:\s*72px;[\s\S]*?touch-action:\s*none;/);
 assert.match(source, /const fanAvailable = !\["unknown", "unavailable"\]/);
 assert.match(source, /class="unavailable-banner"/);
 assert.match(source, /data-preset-automation/);
 assert.match(source, /_renderTimerButton\(180, "3h", activeTimer\)/);
 assert.doesNotMatch(source, /_renderTimerButton\(240, "4h", activeTimer\)/);
+
+const dragRenderCard = new Card();
+dragRenderCard.shadowRoot = { innerHTML: "drag-preview" };
+dragRenderCard._draggingDial = true;
+dragRenderCard._render();
+assert.equal(dragRenderCard.shadowRoot.innerHTML, "drag-preview", "HA updates must not replace the active drag DOM");
+assert.equal(dragRenderCard._renderPendingAfterDrag, true, "a suppressed drag render should be replayed after release");
 
 const syncCard = new Card();
 syncCard._config = { entity: "fan.synced_dyson" };
