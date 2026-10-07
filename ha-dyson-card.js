@@ -4,7 +4,7 @@ class HaDysonCard extends HTMLElement {
   static getStubConfig() {
     return {
       entity: "fan.my_dyson",
-      airflow_control_side: "right",
+      airflow_control_side: "inline",
       language: "auto",
       sensor_detail_layout: "panel",
     };
@@ -68,6 +68,10 @@ class HaDysonCard extends HTMLElement {
             select: {
               mode: "dropdown",
               options: [
+                {
+                  value: "inline",
+                  label: t("Inline", "Inline", "En ligne"),
+                },
                 {
                   value: "right",
                   label: t("Rechts", "Right", "Droite"),
@@ -150,7 +154,11 @@ class HaDysonCard extends HTMLElement {
           case "language":
             return t("Sprache", "Language", "Langue");
           case "airflow_control_side":
-            return t("Luftstrom-Reglerseite", "Airflow control side", "Côté du réglage du flux d'air");
+            return t(
+              "Position von Leistung und Lüftergeschwindigkeit",
+              "Power and fan speed position",
+              "Position de l'alimentation et de la vitesse"
+            );
           case "hide_unsupported":
             return t(
               "Nicht unterstützte Steuerelemente ausblenden",
@@ -171,9 +179,9 @@ class HaDysonCard extends HTMLElement {
         switch (schema.name) {
           case "airflow_control_side":
             return t(
-              "Platziert den vertikalen Luftstrom-Regler rechts oder links am Richtungsrad.",
-              "Places the vertical airflow speed control on the right or left side of the direction wheel.",
-              "Place le réglage vertical de la vitesse du flux d'air à droite ou à gauche de la molette de direction."
+              "Inline ist die Standardeinstellung. Links und Rechts platzieren die Regler vertikal neben dem Richtungsrad.",
+              "Inline is the default. Left and Right place the controls vertically beside the direction wheel.",
+              "En ligne est la valeur par défaut. Gauche et Droite placent les commandes verticalement à côté de la molette."
             );
           case "language":
             return t(
@@ -275,7 +283,7 @@ class HaDysonCard extends HTMLElement {
     const previousEntity = this._config.entity || "";
     this._config = {
       title: "",
-      airflow_control_side: "right",
+      airflow_control_side: "inline",
       hide_unsupported: hideUnsupported,
       hide_empty_sensors: hideEmptySensors,
       sensor_more_button_threshold: sensorMoreButtonThreshold,
@@ -2403,8 +2411,11 @@ class HaDysonCard extends HTMLElement {
     };
     const speedFromPointer = (event) => {
       const rect = speedControl?.getBoundingClientRect();
-      if (!rect?.height) return this._currentSpeed(attributes);
-      const raw = 100 - (((event.clientY - rect.top) / rect.height) * 100);
+      if (!rect?.height || !rect?.width) return this._currentSpeed(attributes);
+      const isInline = speedControl.closest(".airflow-control-inline") !== null;
+      const raw = isInline
+        ? ((event.clientX - rect.left) / rect.width) * 100
+        : 100 - (((event.clientY - rect.top) / rect.height) * 100);
       return this._clamp(Math.round(raw / 10) * 10, 0, 100);
     };
     let speedDragging = false;
@@ -2713,8 +2724,11 @@ class HaDysonCard extends HTMLElement {
     const airflowDirection = this._fanDirection(attributes);
     const airflowDirectionAvailable = fanAvailable && this._supportsFanDirection(attributes);
     const speedAvailable = fanAvailable && this._supportsFanSpeed(attributes);
-    const airflowControlSide = String(this._config.airflow_control_side || "right").toLowerCase() === "left" ? "left" : "right";
-    const speedOnLeft = airflowControlSide === "left";
+    const configuredAirflowPosition = String(this._config.airflow_control_side || "inline").toLowerCase();
+    const airflowControlPosition = ["left", "right"].includes(configuredAirflowPosition)
+      ? configuredAirflowPosition
+      : "inline";
+    const speedOnLeft = airflowControlPosition === "left";
     const direction = this._currentDirection(attributes);
     const width = this._currentWidth(attributes);
     const sensorDetailGroups = this._sensorDetailGroups();
@@ -3008,6 +3022,9 @@ class HaDysonCard extends HTMLElement {
           width: 100%;
           height: auto;
         }
+        .wheel-wrap.airflow-control-inline {
+          --dyson-speed-gutter: 0px;
+        }
         .wheel-stage {
           position: relative;
           width: var(--dyson-wheel-size);
@@ -3249,6 +3266,48 @@ class HaDysonCard extends HTMLElement {
         }
         .speed-power-button ha-icon {
           --mdc-icon-size: 18px;
+        }
+        .wheel-wrap.airflow-control-inline .wheel-speed {
+          position: relative;
+          inset: auto;
+          width: min(100%, 304px);
+          height: 42px;
+          margin: 8px auto 0;
+          grid-template-columns: minmax(0, 1fr) 38px 42px;
+          grid-template-rows: 42px;
+          align-items: center;
+          gap: 8px;
+        }
+        .wheel-wrap.airflow-control-inline .speed-control {
+          width: 100%;
+          height: 42px;
+        }
+        .wheel-wrap.airflow-control-inline .speed-rail {
+          inset: 5px 0;
+          background:
+            linear-gradient(
+              to right,
+              color-mix(in srgb, var(--primary-color, #03a9f4) 86%, #00bcd4 14%) 0 var(--speed-fill),
+              color-mix(in srgb, var(--primary-text-color) 8%, transparent) var(--speed-fill) 100%
+            );
+        }
+        .wheel-wrap.airflow-control-inline .speed-rail::after {
+          left: var(--speed-fill);
+          bottom: 50%;
+          width: 3px;
+          height: 18px;
+          transform: translate(-50%, 50%);
+        }
+        .wheel-wrap.airflow-control-inline .speed-slider {
+          width: 100%;
+          height: 42px;
+          writing-mode: horizontal-tb;
+          direction: ltr;
+        }
+        .wheel-wrap.airflow-control-inline .speed-slider::-webkit-slider-runnable-track,
+        .wheel-wrap.airflow-control-inline .speed-slider::-moz-range-track {
+          width: 100%;
+          height: 42px;
         }
         .timer-flyout {
           position: relative;
@@ -4204,7 +4263,7 @@ class HaDysonCard extends HTMLElement {
                 ${sensorDetailLayout === "panel" ? this._renderSensorDetails(!showSensorMoreButton) : ""}
               </div>
             ` : ""}
-            <div class="wheel-wrap">
+            <div class="wheel-wrap airflow-control-${airflowControlPosition}">
               <div class="wheel-stage">
                 <button class="wheel-button" aria-label="${this._t("set_dyson_direction")}">
                   <svg class="wheel" viewBox="0 0 320 320" role="img" aria-hidden="true">

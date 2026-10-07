@@ -118,7 +118,7 @@ Optional configuration:
 type: custom:ha-dyson-card
 entity: fan.my_dyson
 title: Bedroom Dyson
-airflow_control_side: right
+airflow_control_side: inline
 ```
 
 ## Configuration
@@ -127,7 +127,7 @@ airflow_control_side: right
 | --- | --- | --- | --- |
 | `entity` | string | required | Dyson `fan.` entity from `hass_dyson`. |
 | `title` | string | empty | Optional card title. Empty titles do not render a header. |
-| `airflow_control_side` | `right` or `left` | `right` | Places the vertical airflow speed control on the right or left side. |
+| `airflow_control_side` | `inline`, `left`, or `right` | `inline` | Places power and fan speed in a horizontal panel below the wheel, or vertically on its left or right side. |
 | `language` | string | auto | Optional UI language override (`en`, `de`, or `fr`). If omitted, the card follows the Home Assistant/frontend locale. |
 | `hide_unsupported` | boolean | `false` | Hides controls and info chips that are unavailable on the selected device instead of showing them as disabled/empty. |
 | `hide_empty_sensors` | boolean | `false` | Hides sensor badges with empty values (`unknown`, `unavailable`, or missing values). |

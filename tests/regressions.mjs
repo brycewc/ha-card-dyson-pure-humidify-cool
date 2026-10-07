@@ -46,6 +46,10 @@ assert.equal(typeof Card, "function", "card custom element should be registered"
 
 const card = new Card();
 card._config = { entity: "fan.purificateur_dyson" };
+card.setConfig({ entity: "fan.purificateur_dyson" });
+assert.equal(card._config.airflow_control_side, "inline");
+card.setConfig({ entity: "fan.purificateur_dyson", airflow_control_side: "left" });
+assert.equal(card._config.airflow_control_side, "left");
 
 card._derived = { deviceId: "dyson-device-1" };
 assert.equal(
@@ -112,6 +116,11 @@ assert.match(source, /justify-content:\s*safe center;/);
 assert.doesNotMatch(source, /\.wheel-sensor-strip:not\(\.expanded\)\s*\{/);
 assert.match(source, /--dyson-wheel-size:\s*min\(calc\(100% - var\(--dyson-speed-gutter\) - var\(--dyson-speed-gutter\)\), 304px\)/);
 assert.match(source, /--dyson-speed-gutter:\s*42px/);
+assert.match(source, /airflow_control_side:\s*"inline"/);
+assert.match(source, /value:\s*"inline"[\s\S]*?label:/);
+assert.match(source, /wheel-wrap airflow-control-\$\{airflowControlPosition\}/);
+assert.match(source, /\.wheel-wrap\.airflow-control-inline \.wheel-speed/);
+assert.match(source, /speedControl\.closest\("\.airflow-control-inline"\)/);
 assert.match(source, /margin:\s*var\(--dyson-wheel-offset\) auto 0/);
 assert.match(source, /class="wheel-direction-center"/);
 assert.match(source, /class="wheel-direction-overlay"/);
