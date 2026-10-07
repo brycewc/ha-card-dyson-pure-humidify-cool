@@ -191,6 +191,8 @@ assert.doesNotMatch(source, /wheel-zero-reference|wheel-zero-label|>0°</);
 assert.match(source, /const fanAvailable = !\["unknown", "unavailable"\]/);
 assert.match(source, /class="unavailable-banner"/);
 assert.match(source, /data-preset-automation/);
+assert.match(source, /_renderTimerButton\(180, "3h", activeTimer\)/);
+assert.doesNotMatch(source, /_renderTimerButton\(240, "4h", activeTimer\)/);
 
 const syncCard = new Card();
 syncCard._config = { entity: "fan.synced_dyson" };

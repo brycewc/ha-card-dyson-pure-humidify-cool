@@ -4257,7 +4257,7 @@ class HaDysonCard extends HTMLElement {
                     <div class="timer-inline-buttons">
                       ${this._renderTimerButton(60, "1h", activeTimer)}
                       ${this._renderTimerButton(120, "2h", activeTimer)}
-                      ${this._renderTimerButton(240, "4h", activeTimer)}
+                      ${this._renderTimerButton(180, "3h", activeTimer)}
                       <button class="timer-chip timer-plus ${this._customTimerOpen ? "active" : ""}" data-timer-custom aria-label="${this._t("custom_sleep_timer")}">
                         <ha-icon icon="mdi:plus"></ha-icon>
                       </button>
