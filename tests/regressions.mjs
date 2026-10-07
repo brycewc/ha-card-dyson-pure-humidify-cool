@@ -186,6 +186,8 @@ assert.match(source, /callService\("select", "select_option", \{[\s\S]*?entity_i
 assert.match(source, /callService\("hass_dyson", "set_direction_presets"/);
 assert.match(source, /class="wheel-direction-value"/);
 assert.match(source, /directionValue\.textContent = `\$\{bounds\.center\}\\u00b0`/);
+assert.match(source, /\.wheel-preset-marker\s*\{[\s\S]*?color:\s*white;/);
+assert.match(source, /\.speed-power-button\.active ha-icon\s*\{[\s\S]*?color:\s*#000;/);
 assert.match(source, /\$\{confirmingDelete \? "" : `\s*<button class="direction-preset-remove"/);
 assert.doesNotMatch(source, /this\._pendingPresetDeleteId === button\.dataset\.presetRemove[\s\S]*?_removeDirectionPreset/);
 assert.match(source, /querySelectorAll\("\[data-preset-remove\]"\)[\s\S]*?this\._pendingPresetDeleteId = button\.dataset\.presetRemove;/);

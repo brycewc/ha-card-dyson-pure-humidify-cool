@@ -3136,7 +3136,7 @@ class HaDysonCard extends HTMLElement {
           box-shadow:
             inset 0 1px 0 color-mix(in srgb, white 42%, transparent),
             0 4px 10px color-mix(in srgb, #000 24%, transparent);
-          color: #000;
+          color: white;
           pointer-events: none;
         }
         .wheel-preset-marker ha-icon {
