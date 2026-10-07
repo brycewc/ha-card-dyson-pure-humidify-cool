@@ -3106,14 +3106,20 @@ class HaDysonCard extends HTMLElement {
           pointer-events: none;
           filter: drop-shadow(0 0 3px color-mix(in srgb, var(--primary-color, #4f46e5) 38%, transparent));
         }
-        .wheel-direction-overlay {
+        .wheel-direction-line-overlay,
+        .wheel-direction-handle-overlay {
           position: absolute;
           inset: 0;
           width: 100%;
           height: 100%;
-          z-index: 4;
           pointer-events: none;
           overflow: visible;
+        }
+        .wheel-direction-line-overlay {
+          z-index: 2;
+        }
+        .wheel-direction-handle-overlay {
+          z-index: 4;
         }
         .wheel-cone {
           fill: var(--dyson-cone-bg);
@@ -4312,6 +4318,9 @@ class HaDysonCard extends HTMLElement {
                     ${operationActive ? `<circle class="wheel-spinner" cx="160" cy="160" r="42"></circle>` : ""}
                   </svg>
                 </button>
+                <svg class="wheel-direction-line-overlay" viewBox="0 0 320 320" aria-hidden="true">
+                  <line class="wheel-direction-center" x1="160" y1="160" x2="${centerLineEnd.x}" y2="${centerLineEnd.y}" style="${bounds.width === 0 ? "" : "display:none;"}"></line>
+                </svg>
                 ${this._renderDirectionPresetMarkers()}
                 <button class="wheel-handle-hit" aria-label="${this._t("drag_set_direction")}"></button>
                 <div class="wheel-center-info">
@@ -4319,8 +4328,7 @@ class HaDysonCard extends HTMLElement {
                     ${(hideUnsupported && !controlReady) ? "" : presetWidths.map((preset) => this._renderSweepButton(preset, bounds.width, !controlReady)).join("")}
                   </div>
                 </div>
-                <svg class="wheel-direction-overlay" viewBox="0 0 320 320" aria-hidden="true">
-                  <line class="wheel-direction-center" x1="160" y1="160" x2="${centerLineEnd.x}" y2="${centerLineEnd.y}" style="${bounds.width === 0 ? "" : "display:none;"}"></line>
+                <svg class="wheel-direction-handle-overlay" viewBox="0 0 320 320" aria-hidden="true">
                   <circle class="wheel-handle" cx="${handle.x}" cy="${handle.y}" r="13"></circle>
                 </svg>
               </div>
