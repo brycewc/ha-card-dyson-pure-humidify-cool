@@ -1,0 +1,914 @@
+[
+  {
+    "entity_id": "binary_sensor.bedroom_bedroom_dyson_fault_cldu",
+    "state": "off",
+    "attributes": {
+      "fault_code": "cldu",
+      "fault_value": "OK",
+      "status": "OK",
+      "device_class": "problem",
+      "icon": "mdi:alert",
+      "friendly_name": "Bedroom Dyson Fault CLDU"
+    },
+    "last_changed": "2026-10-08T17:39:01.752647+00:00",
+    "last_reported": "2026-10-08T17:46:32.644588+00:00",
+    "last_updated": "2026-10-08T17:39:01.752647+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.bedroom_bedroom_dyson_fault_etwd",
+    "state": "off",
+    "attributes": {
+      "fault_code": "etwd",
+      "fault_value": "OK",
+      "status": "OK",
+      "device_class": "problem",
+      "icon": "mdi:alert",
+      "friendly_name": "Bedroom Dyson Fault ETWD"
+    },
+    "last_changed": "2026-10-08T17:39:01.752860+00:00",
+    "last_reported": "2026-10-08T17:46:32.644753+00:00",
+    "last_updated": "2026-10-08T17:39:01.752860+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.bedroom_bedroom_dyson_fault_humidity_sensor",
+    "state": "off",
+    "attributes": {
+      "fault_code": "humi",
+      "status": "No data",
+      "device_class": "problem",
+      "icon": "mdi:water-alert",
+      "friendly_name": "Bedroom Dyson Fault Humidity Sensor"
+    },
+    "last_changed": "2026-10-08T17:39:01.751987+00:00",
+    "last_reported": "2026-10-08T17:46:32.644076+00:00",
+    "last_updated": "2026-10-08T17:39:01.751987+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.bedroom_bedroom_dyson_fault_water_level",
+    "state": "off",
+    "attributes": {
+      "fault_code": "tnke",
+      "fault_value": "OK",
+      "status": "OK",
+      "device_class": "problem",
+      "icon": "mdi:alert",
+      "friendly_name": "Bedroom Dyson Fault Water Level"
+    },
+    "last_changed": "2026-10-08T17:39:01.752209+00:00",
+    "last_reported": "2026-10-08T17:46:32.644250+00:00",
+    "last_updated": "2026-10-08T17:39:01.752209+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.bedroom_bedroom_dyson_fault_water_tank_status",
+    "state": "off",
+    "attributes": {
+      "fault_code": "tnkp",
+      "fault_value": "OK",
+      "status": "OK",
+      "device_class": "problem",
+      "icon": "mdi:alert",
+      "friendly_name": "Bedroom Dyson Fault Water Tank Status"
+    },
+    "last_changed": "2026-10-08T17:39:01.752426+00:00",
+    "last_reported": "2026-10-08T17:46:32.644421+00:00",
+    "last_updated": "2026-10-08T17:39:01.752426+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.dyson_ph01_fault_air_quality_sensor",
+    "state": "off",
+    "attributes": {
+      "fault_code": "aqs",
+      "status": "No data",
+      "device_class": "problem",
+      "icon": "mdi:air-purifier",
+      "friendly_name": "Bedroom Dyson Fault Air Quality Sensor"
+    },
+    "last_changed": "2026-10-08T17:39:01.751110+00:00",
+    "last_reported": "2026-10-08T17:46:32.643374+00:00",
+    "last_updated": "2026-10-08T17:39:01.751110+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.dyson_ph01_fault_filter",
+    "state": "off",
+    "attributes": {
+      "fault_code": "fltr",
+      "fault_value": "OK",
+      "status": "OK",
+      "device_class": "problem",
+      "icon": "mdi:air-filter",
+      "friendly_name": "Bedroom Dyson Fault Filter"
+    },
+    "last_changed": "2026-10-08T17:39:01.751343+00:00",
+    "last_reported": "2026-10-08T17:46:32.643555+00:00",
+    "last_updated": "2026-10-08T17:39:01.751343+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.dyson_ph01_fault_hepa_filter",
+    "state": "off",
+    "attributes": {
+      "fault_code": "hflr",
+      "status": "No data",
+      "device_class": "problem",
+      "icon": "mdi:air-filter",
+      "friendly_name": "Bedroom Dyson Fault HEPA Filter"
+    },
+    "last_changed": "2026-10-08T17:39:01.751563+00:00",
+    "last_reported": "2026-10-08T17:46:32.643723+00:00",
+    "last_updated": "2026-10-08T17:39:01.751563+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.dyson_ph01_fault_motor",
+    "state": "off",
+    "attributes": {
+      "fault_code": "mflr",
+      "status": "No data",
+      "device_class": "problem",
+      "icon": "mdi:fan-alert",
+      "friendly_name": "Bedroom Dyson Fault Motor"
+    },
+    "last_changed": "2026-10-08T17:39:01.751770+00:00",
+    "last_reported": "2026-10-08T17:46:32.643903+00:00",
+    "last_updated": "2026-10-08T17:39:01.751770+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.dyson_ph01_fault_power_supply",
+    "state": "off",
+    "attributes": {
+      "fault_code": "pwr",
+      "status": "No data",
+      "device_class": "problem",
+      "icon": "mdi:power-plug-off",
+      "friendly_name": "Bedroom Dyson Fault Power Supply"
+    },
+    "last_changed": "2026-10-08T17:39:01.753110+00:00",
+    "last_reported": "2026-10-08T17:46:32.644907+00:00",
+    "last_updated": "2026-10-08T17:39:01.753110+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.dyson_ph01_fault_system",
+    "state": "off",
+    "attributes": {
+      "fault_code": "sys",
+      "status": "No data",
+      "device_class": "problem",
+      "icon": "mdi:alert-circle",
+      "friendly_name": "Bedroom Dyson Fault System"
+    },
+    "last_changed": "2026-10-08T17:39:01.753509+00:00",
+    "last_reported": "2026-10-08T17:46:32.645211+00:00",
+    "last_updated": "2026-10-08T17:39:01.753509+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.dyson_ph01_fault_wifi_connection",
+    "state": "off",
+    "attributes": {
+      "fault_code": "wifi",
+      "status": "No data",
+      "device_class": "problem",
+      "icon": "mdi:wifi-off",
+      "friendly_name": "Bedroom Dyson Fault WiFi Connection"
+    },
+    "last_changed": "2026-10-08T17:39:01.753310+00:00",
+    "last_reported": "2026-10-08T17:46:32.645059+00:00",
+    "last_updated": "2026-10-08T17:39:01.753310+00:00"
+  },
+  {
+    "entity_id": "binary_sensor.dyson_ph01_filter_replacement",
+    "state": "off",
+    "attributes": {
+      "device_class": "problem",
+      "icon": "mdi:air-filter",
+      "friendly_name": "Bedroom Dyson Filter Replacement"
+    },
+    "last_changed": "2026-10-08T17:39:01.750853+00:00",
+    "last_reported": "2026-10-08T17:46:32.643150+00:00",
+    "last_updated": "2026-10-08T17:39:01.750853+00:00"
+  },
+  {
+    "entity_id": "button.dyson_ph01_reconnect",
+    "state": "unknown",
+    "attributes": {
+      "icon": "mdi:wifi-sync",
+      "friendly_name": "Bedroom Dyson Reconnect"
+    },
+    "last_changed": "2026-10-08T17:39:01.766373+00:00",
+    "last_reported": "2026-10-08T17:46:32.653666+00:00",
+    "last_updated": "2026-10-08T17:39:01.766373+00:00"
+  },
+  {
+    "entity_id": "calendar.dyson_ph01_schedule",
+    "state": "on",
+    "attributes": {
+      "message": "Bedroom: Auto, Oscillating",
+      "all_day": false,
+      "start_time": "2026-10-08 08:00:00",
+      "end_time": "2026-10-08 22:00:00",
+      "location": "",
+      "description": "Group 1\n  08:00:00: Auto, Oscillating\n  22:00:00: Auto, Oscillating\nDays: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday",
+      "icon": "mdi:calendar-clock",
+      "friendly_name": "Bedroom Dyson Schedule"
+    },
+    "last_changed": "2026-10-08T17:39:01.761332+00:00",
+    "last_reported": "2026-10-08T17:46:32.649560+00:00",
+    "last_updated": "2026-10-08T17:39:01.761332+00:00"
+  },
+  {
+    "entity_id": "climate.bedroom_bedroom_dyson",
+    "state": "off",
+    "attributes": {
+      "hvac_modes": [
+        "off",
+        "fan_only"
+      ],
+      "min_temp": 34,
+      "max_temp": 99,
+      "target_temp_step": 1,
+      "min_humidity": 30,
+      "max_humidity": 50,
+      "target_humidity_step": 1,
+      "current_temperature": 73,
+      "humidity": 30,
+      "hvac_action": "off",
+      "target_temperature": 20,
+      "hvac_mode": "off",
+      "humidity_enabled": "OFF",
+      "humidity_auto": "OFF",
+      "current_humidity_raw": "0000",
+      "fan_power": "OFF",
+      "target_temperature_kelvin": "2932",
+      "target_humidity": 30,
+      "target_humidity_formatted": "0030",
+      "icon": "mdi:thermostat",
+      "friendly_name": "Bedroom Dyson",
+      "supported_features": 388
+    },
+    "last_changed": "2026-10-08T17:39:01.765464+00:00",
+    "last_reported": "2026-10-08T17:46:32.653137+00:00",
+    "last_updated": "2026-10-08T17:39:01.765464+00:00"
+  },
+  {
+    "entity_id": "fan.dyson_ph01",
+    "state": "off",
+    "attributes": {
+      "preset_modes": [
+        "auto",
+        "manual"
+      ],
+      "direction": "forward",
+      "oscillating": true,
+      "percentage": 40,
+      "percentage_step": 10,
+      "preset_mode": "auto",
+      "fan_speed": 40,
+      "is_on": false,
+      "fan_power": false,
+      "fan_state": "OFF",
+      "fan_speed_setting": "AUTO",
+      "auto_mode": true,
+      "night_mode": false,
+      "oscillation_enabled": true,
+      "angle_low": 180,
+      "angle_high": 180,
+      "oscillation_span": 0,
+      "sleep_timer": 0,
+      "friendly_name": "Bedroom Dyson",
+      "supported_features": 63
+    },
+    "last_changed": "2026-10-08T17:39:01.764535+00:00",
+    "last_reported": "2026-10-08T17:46:32.652509+00:00",
+    "last_updated": "2026-10-08T17:39:01.764535+00:00"
+  },
+  {
+    "entity_id": "humidifier.bedroom_bedroom_dyson",
+    "state": "off",
+    "attributes": {
+      "min_humidity": 30,
+      "max_humidity": 70,
+      "available_modes": [
+        "normal",
+        "auto"
+      ],
+      "humidity": 30,
+      "mode": null,
+      "humidity_enabled_raw": "OFF",
+      "humidity_auto_raw": "OFF",
+      "current_humidity_raw": "0000",
+      "target_humidity_raw": "0030",
+      "device_class": "humidifier",
+      "icon": "mdi:air-humidifier",
+      "friendly_name": "Bedroom Dyson",
+      "supported_features": 1
+    },
+    "last_changed": "2026-10-08T17:39:01.764965+00:00",
+    "last_reported": "2026-10-08T17:46:32.652692+00:00",
+    "last_updated": "2026-10-08T17:39:01.764965+00:00"
+  },
+  {
+    "entity_id": "number.dyson_ph01_oscillation_angle",
+    "state": "45",
+    "attributes": {
+      "min": 0,
+      "max": 350,
+      "step": 1,
+      "mode": "slider",
+      "unit_of_measurement": "°",
+      "icon": "mdi:angle-acute",
+      "friendly_name": "Bedroom Dyson Oscillation Angle"
+    },
+    "last_changed": "2026-10-08T17:39:01.767425+00:00",
+    "last_reported": "2026-10-08T17:46:32.654406+00:00",
+    "last_updated": "2026-10-08T17:39:01.767425+00:00"
+  },
+  {
+    "entity_id": "number.dyson_ph01_oscillation_center_angle",
+    "state": "180",
+    "attributes": {
+      "min": 0,
+      "max": 350,
+      "step": 1,
+      "mode": "slider",
+      "unit_of_measurement": "°",
+      "icon": "mdi:crosshairs",
+      "friendly_name": "Bedroom Dyson Oscillation Center Angle"
+    },
+    "last_changed": "2026-10-08T17:39:01.767246+00:00",
+    "last_reported": "2026-10-08T17:46:32.654288+00:00",
+    "last_updated": "2026-10-08T17:39:01.767246+00:00"
+  },
+  {
+    "entity_id": "number.dyson_ph01_oscillation_high_angle",
+    "state": "202",
+    "attributes": {
+      "min": 0,
+      "max": 350,
+      "step": 1,
+      "mode": "slider",
+      "unit_of_measurement": "°",
+      "icon": "mdi:rotate-right",
+      "friendly_name": "Bedroom Dyson Oscillation High Angle"
+    },
+    "last_changed": "2026-10-08T17:39:01.767062+00:00",
+    "last_reported": "2026-10-08T17:46:32.654161+00:00",
+    "last_updated": "2026-10-08T17:39:01.767062+00:00"
+  },
+  {
+    "entity_id": "number.dyson_ph01_oscillation_low_angle",
+    "state": "158",
+    "attributes": {
+      "min": 0,
+      "max": 350,
+      "step": 1,
+      "mode": "slider",
+      "unit_of_measurement": "°",
+      "icon": "mdi:rotate-left",
+      "friendly_name": "Bedroom Dyson Oscillation Low Angle"
+    },
+    "last_changed": "2026-10-08T17:39:01.766878+00:00",
+    "last_reported": "2026-10-08T17:46:32.654022+00:00",
+    "last_updated": "2026-10-08T17:39:01.766878+00:00"
+  },
+  {
+    "entity_id": "number.dyson_ph01_sleep_timer",
+    "state": "0",
+    "attributes": {
+      "min": 0,
+      "max": 540,
+      "step": 15,
+      "mode": "box",
+      "sleep_timer_minutes": 0,
+      "sleep_timer_raw": "OFF",
+      "sleep_timer_enabled": false,
+      "unit_of_measurement": "min",
+      "icon": "mdi:timer",
+      "friendly_name": "Bedroom Dyson Sleep Timer"
+    },
+    "last_changed": "2026-10-08T17:39:01.766635+00:00",
+    "last_reported": "2026-10-08T17:46:32.653830+00:00",
+    "last_updated": "2026-10-08T17:39:01.766635+00:00"
+  },
+  {
+    "entity_id": "select.bedroom_bedroom_dyson_water_hardness",
+    "state": "Hard",
+    "attributes": {
+      "options": [
+        "Soft",
+        "Medium",
+        "Hard"
+      ],
+      "water_hardness": "Hard",
+      "water_hardness_raw": "2025",
+      "icon": "mdi:water-percent",
+      "friendly_name": "Bedroom Dyson Water Hardness"
+    },
+    "last_changed": "2026-10-08T17:39:01.765923+00:00",
+    "last_reported": "2026-10-08T17:46:32.653416+00:00",
+    "last_updated": "2026-10-08T17:39:01.765923+00:00"
+  },
+  {
+    "entity_id": "select.dyson_ph01_oscillation",
+    "state": "45°",
+    "attributes": {
+      "options": [
+        "45°",
+        "90°",
+        "180°",
+        "350°",
+        "Breeze",
+        "Custom"
+      ],
+      "oscillation_mode": "45°",
+      "oscillation_enabled": true,
+      "oscillation_angle_low": 180,
+      "oscillation_angle_high": 180,
+      "oscillation_center": 180,
+      "oscillation_span": 0,
+      "icon": "mdi:rotate-3d-variant",
+      "friendly_name": "Bedroom Dyson Oscillation"
+    },
+    "last_changed": "2026-10-08T17:39:01.765735+00:00",
+    "last_reported": "2026-10-08T17:46:32.653306+00:00",
+    "last_updated": "2026-10-08T17:39:01.765735+00:00"
+  },
+  {
+    "entity_id": "sensor.bedroom_bedroom_dyson_cleaning_time_remaining",
+    "state": "60",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "min",
+      "device_class": "duration",
+      "icon": "mdi:wrench-clock",
+      "friendly_name": "Bedroom Dyson Cleaning time remaining"
+    },
+    "last_changed": "2026-10-08T17:39:01.743523+00:00",
+    "last_reported": "2026-10-08T17:46:32.641268+00:00",
+    "last_updated": "2026-10-08T17:39:01.743523+00:00"
+  },
+  {
+    "entity_id": "sensor.bedroom_bedroom_dyson_next_cleaning_cycle",
+    "state": "1709",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "h",
+      "device_class": "duration",
+      "icon": "mdi:calendar-filter",
+      "friendly_name": "Bedroom Dyson Next cleaning cycle"
+    },
+    "last_changed": "2026-10-08T17:39:01.743200+00:00",
+    "last_reported": "2026-10-08T17:46:32.641075+00:00",
+    "last_updated": "2026-10-08T17:39:01.743200+00:00"
+  },
+  {
+    "entity_id": "sensor.bedroom_bedroom_dyson_no2",
+    "state": "1",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "μg/m³",
+      "device_class": "nitrogen_dioxide",
+      "icon": "mdi:molecule",
+      "friendly_name": "Bedroom Dyson NO2"
+    },
+    "last_changed": "2026-10-08T17:39:01.739817+00:00",
+    "last_reported": "2026-10-08T17:46:32.639091+00:00",
+    "last_updated": "2026-10-08T17:39:01.739817+00:00"
+  },
+  {
+    "entity_id": "sensor.bedroom_bedroom_dyson_pm10",
+    "state": "398",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "μg/m³",
+      "device_class": "pm10",
+      "icon": "mdi:air-filter",
+      "friendly_name": "Bedroom Dyson PM10"
+    },
+    "last_changed": "2026-10-08T17:47:35.699629+00:00",
+    "last_reported": "2026-10-08T17:47:35.717900+00:00",
+    "last_updated": "2026-10-08T17:47:35.699629+00:00"
+  },
+  {
+    "entity_id": "sensor.bedroom_bedroom_dyson_pm2_5",
+    "state": "401",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "μg/m³",
+      "device_class": "pm25",
+      "icon": "mdi:air-filter",
+      "friendly_name": "Bedroom Dyson PM2.5"
+    },
+    "last_changed": "2026-10-08T17:47:35.717416+00:00",
+    "last_reported": "2026-10-08T17:47:35.728440+00:00",
+    "last_updated": "2026-10-08T17:47:35.717416+00:00"
+  },
+  {
+    "entity_id": "sensor.bedroom_bedroom_dyson_voc",
+    "state": "0.017",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "mg/m³",
+      "device_class": "volatile_organic_compounds",
+      "icon": "mdi:air-filter",
+      "friendly_name": "Bedroom Dyson VOC"
+    },
+    "last_changed": "2026-10-08T17:47:35.700496+00:00",
+    "last_reported": "2026-10-08T17:47:35.718152+00:00",
+    "last_updated": "2026-10-08T17:47:35.700496+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_air_quality_category",
+    "state": "Severe",
+    "attributes": {
+      "aqi": 304,
+      "dominant_pollutants": [
+        "PM2.5"
+      ],
+      "icon": "mdi:air-filter",
+      "friendly_name": "Bedroom Dyson Air Quality Category"
+    },
+    "last_changed": "2026-10-08T17:39:01.749562+00:00",
+    "last_reported": "2026-10-08T17:46:32.642017+00:00",
+    "last_updated": "2026-10-08T17:45:23.681442+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_air_quality_index",
+    "state": "304",
+    "attributes": {
+      "state_class": "measurement",
+      "category": "Severe",
+      "dominant_pollutants": [
+        "PM2.5"
+      ],
+      "device_class": "aqi",
+      "icon": "mdi:air-filter",
+      "friendly_name": "Bedroom Dyson Air Quality Index"
+    },
+    "last_changed": "2026-10-08T17:45:23.680950+00:00",
+    "last_reported": "2026-10-08T17:46:32.641696+00:00",
+    "last_updated": "2026-10-08T17:45:23.680950+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_connection_status",
+    "state": "Local",
+    "attributes": {
+      "icon": "mdi:connection",
+      "friendly_name": "Bedroom Dyson Connection Status"
+    },
+    "last_changed": "2026-10-08T17:39:01.740987+00:00",
+    "last_reported": "2026-10-08T17:46:32.639718+00:00",
+    "last_updated": "2026-10-08T17:39:01.740987+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_dominant_pollutant",
+    "state": "PM2.5",
+    "attributes": {
+      "aqi": 304,
+      "category": "Severe",
+      "pollutant_count": 1,
+      "icon": "mdi:molecule",
+      "friendly_name": "Bedroom Dyson Dominant Pollutant"
+    },
+    "last_changed": "2026-10-08T17:39:01.749915+00:00",
+    "last_reported": "2026-10-08T17:46:32.642335+00:00",
+    "last_updated": "2026-10-08T17:45:23.681930+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_hepa_filter_life",
+    "state": "29",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "icon": "mdi:air-filter",
+      "friendly_name": "Bedroom Dyson HEPA Filter Life"
+    },
+    "last_changed": "2026-10-08T17:39:01.741629+00:00",
+    "last_reported": "2026-10-08T17:46:32.640123+00:00",
+    "last_updated": "2026-10-08T17:39:01.741629+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_hepa_filter_type",
+    "state": "GCOM",
+    "attributes": {
+      "icon": "mdi:air-filter",
+      "friendly_name": "Bedroom Dyson HEPA Filter Type"
+    },
+    "last_changed": "2026-10-08T17:39:01.741925+00:00",
+    "last_reported": "2026-10-08T17:46:32.640300+00:00",
+    "last_updated": "2026-10-08T17:39:01.741925+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_humidity",
+    "state": "59",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "device_class": "humidity",
+      "friendly_name": "Bedroom Dyson Humidity"
+    },
+    "last_changed": "2026-10-08T17:39:01.742686+00:00",
+    "last_reported": "2026-10-08T17:46:32.640886+00:00",
+    "last_updated": "2026-10-08T17:39:01.742686+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_indoor_aqi_15_min",
+    "state": "141.0",
+    "attributes": {
+      "state_class": "measurement",
+      "start_time": "2026-10-02T06:00:00Z",
+      "resolution": 15,
+      "sample_count": 672,
+      "min": 7,
+      "max": 147.7,
+      "last_24h": [
+        32.8,
+        26.7,
+        19.6,
+        14,
+        9.4,
+        7.7,
+        11.4,
+        8.6,
+        9.8,
+        9.2,
+        9,
+        8.5,
+        8.1,
+        8,
+        8,
+        12.1,
+        11.2,
+        9.5,
+        9,
+        10.2,
+        9,
+        12,
+        12.8,
+        11.2,
+        9.3,
+        9.4,
+        17.8,
+        12.4,
+        11.1,
+        10.1,
+        9.4,
+        8.3,
+        7.2,
+        78.5,
+        99.3,
+        117,
+        114.8,
+        123.3,
+        135.5,
+        135.6,
+        135,
+        133.9,
+        136.1,
+        138.6,
+        139.8,
+        140.2,
+        139.5,
+        141,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "icon": "mdi:chart-line",
+      "friendly_name": "Bedroom Dyson Indoor AQI (15-min)"
+    },
+    "last_changed": "2026-10-08T17:47:15.197187+00:00",
+    "last_reported": "2026-10-08T17:47:35.719969+00:00",
+    "last_updated": "2026-10-08T17:47:15.197187+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_ip_address",
+    "state": "192.0.2.10",
+    "attributes": {
+      "icon": "mdi:ip-network",
+      "friendly_name": "Bedroom Dyson IP Address"
+    },
+    "last_changed": "2026-10-08T17:39:01.741270+00:00",
+    "last_reported": "2026-10-08T17:46:32.639884+00:00",
+    "last_updated": "2026-10-08T17:39:01.741270+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_outdoor_aqi",
+    "state": "51",
+    "attributes": {
+      "state_class": "measurement",
+      "aqi_name": "Moderate",
+      "aqi_description": "Air quality is acceptable; however, for some pollutants there may be a moderate health concern for a very small number of people. For example, people who are unusually sensitive to ozone may experience respiratory symptoms.",
+      "pm2_5": 7,
+      "pm10": 96,
+      "no2": 33,
+      "humidity": null,
+      "temperature": null,
+      "weather_state": 2,
+      "location": "Anytown",
+      "dominant_pollen": "Low",
+      "as_of": "2026-10-08T17:00:00Z",
+      "device_class": "aqi",
+      "icon": "mdi:weather-windy",
+      "friendly_name": "Bedroom Dyson Outdoor AQI"
+    },
+    "last_changed": "2026-10-08T17:39:01.750175+00:00",
+    "last_reported": "2026-10-08T17:46:32.642701+00:00",
+    "last_updated": "2026-10-08T17:39:01.750175+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_scheduled_events",
+    "state": "1 active",
+    "attributes": {
+      "schedule_enabled": true,
+      "active_schedule_count": 1,
+      "active_event_count": 2,
+      "total_event_count": 2,
+      "events": [
+        {
+          "groupId": 1,
+          "weeklyRepeat": true,
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "enabled": true,
+          "startTime": "22:00:00",
+          "settings": {
+            "hume": "HUMD",
+            "humt": "0030",
+            "haut": "ON",
+            "fnsp": "AUTO",
+            "fdir": "ON",
+            "oson": "ON",
+            "nmod": "OFF",
+            "auto": "ON"
+          }
+        },
+        {
+          "groupId": 1,
+          "weeklyRepeat": true,
+          "days": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            0
+          ],
+          "enabled": true,
+          "startTime": "08:00:00",
+          "settings": {
+            "hume": "HUMD",
+            "humt": "0030",
+            "haut": "ON",
+            "fnsp": "AUTO",
+            "fdir": "ON",
+            "oson": "ON",
+            "nmod": "OFF",
+            "auto": "ON"
+          }
+        }
+      ],
+      "icon": "mdi:calendar-clock",
+      "friendly_name": "Bedroom Dyson Scheduled Events"
+    },
+    "last_changed": "2026-10-08T17:39:01.767993+00:00",
+    "last_reported": "2026-10-08T17:46:32.654744+00:00",
+    "last_updated": "2026-10-08T17:39:01.767993+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_temperature",
+    "state": "72.86",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°F",
+      "device_class": "temperature",
+      "friendly_name": "Bedroom Dyson Temperature"
+    },
+    "last_changed": "2026-10-08T17:39:01.742282+00:00",
+    "last_reported": "2026-10-08T17:46:32.640536+00:00",
+    "last_updated": "2026-10-08T17:39:01.742282+00:00"
+  },
+  {
+    "entity_id": "sensor.dyson_ph01_wifi_signal",
+    "state": "-40",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "dBm",
+      "device_class": "signal_strength",
+      "icon": "mdi:wifi",
+      "friendly_name": "Bedroom Dyson WiFi Signal"
+    },
+    "last_changed": "2026-10-08T17:47:35.651400+00:00",
+    "last_reported": "2026-10-08T17:47:35.718249+00:00",
+    "last_updated": "2026-10-08T17:47:35.651400+00:00"
+  },
+  {
+    "entity_id": "switch.dyson_ph01_continuous_monitoring",
+    "state": "on",
+    "attributes": {
+      "continuous_monitoring": true,
+      "monitoring_mode": "ON",
+      "icon": "mdi:monitor-eye",
+      "friendly_name": "Bedroom Dyson Continuous Monitoring"
+    },
+    "last_changed": "2026-10-08T17:39:01.764174+00:00",
+    "last_reported": "2026-10-08T17:46:32.652077+00:00",
+    "last_updated": "2026-10-08T17:39:01.764174+00:00"
+  },
+  {
+    "entity_id": "switch.dyson_ph01_firmware_auto_update",
+    "state": "on",
+    "attributes": {
+      "current_firmware_version": "ECG2PF.46.00.007.0003",
+      "icon": "mdi:cloud-sync",
+      "friendly_name": "Bedroom Dyson Firmware Auto Update"
+    },
+    "last_changed": "2026-10-08T17:39:01.763968+00:00",
+    "last_reported": "2026-10-08T17:46:32.651972+00:00",
+    "last_updated": "2026-10-08T17:39:01.763968+00:00"
+  },
+  {
+    "entity_id": "switch.dyson_ph01_night_mode",
+    "state": "off",
+    "attributes": {
+      "icon": "mdi:weather-night",
+      "friendly_name": "Bedroom Dyson Night Mode"
+    },
+    "last_changed": "2026-10-08T17:39:01.763726+00:00",
+    "last_reported": "2026-10-08T17:46:32.651839+00:00",
+    "last_updated": "2026-10-08T17:39:01.763726+00:00"
+  },
+  {
+    "entity_id": "update.dyson_ph01_firmware_update",
+    "state": "off",
+    "attributes": {
+      "auto_update": true,
+      "display_precision": 0,
+      "installed_version": "ECG2PF.46.00.007.0003",
+      "in_progress": false,
+      "latest_version": "ECG2PF.46.00.007.0003",
+      "release_summary": null,
+      "release_url": null,
+      "skipped_version": null,
+      "title": "Dyson Device Firmware",
+      "update_percentage": null,
+      "device_class": "firmware",
+      "entity_picture": "/api/brands/integration/hass_dyson/icon.png",
+      "icon": "mdi:cellphone-arrow-down",
+      "friendly_name": "Bedroom Dyson Firmware Update",
+      "supported_features": 1
+    },
+    "last_changed": "2026-10-08T17:39:01.766159+00:00",
+    "last_reported": "2026-10-08T17:46:32.653578+00:00",
+    "last_updated": "2026-10-08T17:39:01.766159+00:00"
+  }
+]

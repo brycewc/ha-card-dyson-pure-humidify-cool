@@ -1,0 +1,308 @@
+{
+  "fanEntity": "fan.dyson_ph01",
+  "device": {
+    "id": "0123456789abcdef0123456789abcdef",
+    "name": "Dyson PH01",
+    "name_by_user": "Bedroom Dyson",
+    "model": "358"
+  },
+  "entities": [
+    {
+      "entity_id": "binary_sensor.bedroom_bedroom_dyson_fault_cldu",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.bedroom_bedroom_dyson_fault_etwd",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.bedroom_bedroom_dyson_fault_humidity_sensor",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.bedroom_bedroom_dyson_fault_water_level",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.bedroom_bedroom_dyson_fault_water_tank_status",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.dyson_ph01_fault_air_quality_sensor",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.dyson_ph01_fault_filter",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.dyson_ph01_fault_hepa_filter",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.dyson_ph01_fault_motor",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.dyson_ph01_fault_power_supply",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.dyson_ph01_fault_system",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.dyson_ph01_fault_wifi_connection",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "binary_sensor.dyson_ph01_filter_replacement",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "filter_replacement",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "button.dyson_ph01_reconnect",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "reconnect",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "calendar.dyson_ph01_schedule",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "schedule",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "climate.bedroom_bedroom_dyson",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "dyson_climate",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "fan.dyson_ph01",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "dyson_fan",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "humidifier.bedroom_bedroom_dyson",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "dyson_humidifier",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "number.dyson_ph01_oscillation_angle",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "oscillation_angle_span",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "number.dyson_ph01_oscillation_center_angle",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "oscillation_center_angle",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "number.dyson_ph01_oscillation_high_angle",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "oscillation_high_angle",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "number.dyson_ph01_oscillation_low_angle",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "oscillation_low_angle",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "number.dyson_ph01_sleep_timer",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "sleep_timer",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "select.bedroom_bedroom_dyson_water_hardness",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "water_hardness",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "select.dyson_ph01_oscillation",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "oscillation_mode",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.bedroom_bedroom_dyson_cleaning_time_remaining",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "cleaning_time_remaining",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.bedroom_bedroom_dyson_next_cleaning_cycle",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "next_cleaning_cycle",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.bedroom_bedroom_dyson_no2",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "no2",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.bedroom_bedroom_dyson_pm10",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "pm10",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.bedroom_bedroom_dyson_pm2_5",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "pm25",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.bedroom_bedroom_dyson_voc",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "voc",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_air_quality_category",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "aqi_category",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_air_quality_index",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "aqi",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_connection_status",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "connection_status",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_dominant_pollutant",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "dominant_pollutant",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_hepa_filter_life",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "hepa_filter_life",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_hepa_filter_type",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "hepa_filter_type",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_humidity",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "humidity",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_indoor_aqi_15_min",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "indoor_aqi_15_min",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_ip_address",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "ip_address",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_outdoor_aqi",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "outdoor_aqi",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_scheduled_events",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "scheduled_events",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_temperature",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "temperature",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "sensor.dyson_ph01_wifi_signal",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "wifi_signal",
+      "platform": "hass_dyson",
+      "entity_category": "diagnostic"
+    },
+    {
+      "entity_id": "switch.dyson_ph01_continuous_monitoring",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "continuous_monitoring",
+      "platform": "hass_dyson",
+      "entity_category": "config"
+    },
+    {
+      "entity_id": "switch.dyson_ph01_firmware_auto_update",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "firmware_auto_update",
+      "platform": "hass_dyson",
+      "entity_category": "config"
+    },
+    {
+      "entity_id": "switch.dyson_ph01_night_mode",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "night_mode",
+      "platform": "hass_dyson"
+    },
+    {
+      "entity_id": "update.dyson_ph01_firmware_update",
+      "device_id": "0123456789abcdef0123456789abcdef",
+      "translation_key": "firmware_update",
+      "platform": "hass_dyson",
+      "entity_category": "config"
+    }
+  ]
+}

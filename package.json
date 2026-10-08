@@ -1,0 +1,32 @@
+{
+  "name": "ha-card-dyson-pure-humidify-cool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Home Assistant Lovelace card for the Dyson Purifier Humidify+Cool (PH01) via hass_dyson.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "dev:live": "vite --mode live",
+    "dev:ha": "node dev/serve-ha-dev.mjs",
+    "ha:dev-resource": "node dev/ha-dev-resource.mjs",
+    "snapshot": "node dev/snapshot.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:live": "vitest run --config vitest.live.config.ts"
+  },
+  "dependencies": {
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@material/material-color-utilities": "^0.4.0",
+    "@mdi/js": "^7.4.47",
+    "@types/node": "^26.6.4",
+    "happy-dom": "^20.14.5",
+    "home-assistant-js-websocket": "^9.7.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
+  }
+}

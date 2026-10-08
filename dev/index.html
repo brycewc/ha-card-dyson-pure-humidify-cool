@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dyson card harness</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Roboto:wght@400;500;700&display=swap"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: Roboto, system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #e8e8ec;
+        color: #1b1b1f;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #121214;
+          color: #e4e4e7;
+        }
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 16px;
+        padding: 10px 16px;
+        background: inherit;
+        border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+        font-size: 13px;
+      }
+      header label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      header .badge {
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+      .badge.mock {
+        background: #d7e3ff;
+        color: #0b2a5b;
+      }
+      .badge.live {
+        background: #c8f0cf;
+        color: #0b3d16;
+      }
+      .badge.armed {
+        background: #ffd9d4;
+        color: #5c0b05;
+      }
+      main {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 16px;
+        align-items: flex-start;
+      }
+      .preview {
+        padding: 16px;
+        border-radius: 16px;
+        background: var(--lovelace-background, var(--primary-background-color));
+      }
+      .preview > .caption {
+        margin: 0 0 8px;
+        color: var(--secondary-text-color);
+        font-size: 12px;
+      }
+      #log {
+        margin: 0 16px 16px;
+        padding: 12px;
+        max-height: 240px;
+        overflow: auto;
+        border-radius: 12px;
+        background: color-mix(in srgb, currentColor 6%, transparent);
+        font: 12px/1.5 ui-monospace, Menlo, monospace;
+        white-space: pre-wrap;
+      }
+      #log .blocked,
+      #log .error {
+        color: #c62828;
+      }
+      #log .dry-run {
+        color: #8a6d00;
+      }
+      #more-info {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 3;
+        width: min(420px, calc(100vw - 32px));
+        max-height: 60vh;
+        overflow: auto;
+        margin: 0;
+        padding: 12px;
+        border-radius: 12px;
+        background: #fff;
+        color: #111;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+        font: 12px/1.4 ui-monospace, Menlo, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="controls"></header>
+    <main id="previews"></main>
+    <div id="log" aria-live="polite"></div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
