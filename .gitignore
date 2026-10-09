@@ -6,5 +6,3 @@ dist-dev/
 .env
 .env.*
 !.env.example
-dyson-card-context.md
-dyson-states-snapshot.json
